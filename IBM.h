@@ -27,7 +27,7 @@ private:
   double *normals_x;
   double *normals_y;
   // Molecular dynamics
-  double mass; double bulk;
+  double mass; double bulk; double density;
   double fx; double fy;
   double Vx; double Vy;
   void Update_Vx(double dt, double coeff){Vx+=fx*(dt*coeff/mass);};
@@ -73,10 +73,11 @@ private:
       }
   }
 public:
-  IBMDisk(int nDots, double rad, double X, double Y);
+  IBMDisk(int nDots, double r, double b, double m, double X, double Y);
   ~IBMDisk(void);
   int GetNdots(){return NDots;};
   double GetMass(){return mass;}; double GetBulk(){return bulk;};
+  double GetDensity(){return density;};
   double* GetDotsX(){return dots_x;};
   double* GetDotsY(){return dots_y;};
   double GetX(){return X_center;};

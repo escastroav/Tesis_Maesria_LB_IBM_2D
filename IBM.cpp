@@ -1,11 +1,12 @@
 #include "IBM.h"
 
-IBMDisk::IBMDisk(int nDots, double rad, double X, double Y)
+IBMDisk::IBMDisk(int nDots, double r, double b, double m, double X, double Y)
 {
-  NDots = nDots; radius = rad; X_center = X; Y_center = Y;
+  NDots = nDots; radius = r; X_center = X; Y_center = Y;
   dots_x = new double [NDots]; dots_y = new double [NDots];
   normals_x = new double [NDots];normals_y = new double [NDots];
-  fx = 0; fy = 0; Vx = 0; Vy = 0; mass = 10.0; bulk = 0.5;
+  fx = 0; fy = 0; Vx = 0; Vy = 0; mass = m; bulk = b;
+  density = mass / (M_PI*radius*radius);
   LocateDots();
 }
 IBMDisk::~IBMDisk(void)

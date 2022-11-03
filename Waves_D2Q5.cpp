@@ -34,7 +34,7 @@ double LatticeBoltzmann::Fbpx(int Ndots, int ix, int iy,  double * dotsx, double
   for(int k=0; k<Ndots; k++){
     I_Jx = Interpolate('X', dotsx[k], dotsy[k]);
     Fx_k = (BU - I_Jx);
-    f += Fx_k * Kernel(ix - dotsx[k]) * Kernel(iy - dotsy[k])*1.0;
+    f += Fx_k * Kernel(ix - dotsx[k]) * Kernel(iy - dotsy[k])*1.19;
   }
   return f;
 }
@@ -47,7 +47,7 @@ double LatticeBoltzmann::Fbpy(int Ndots, int ix, int iy, double * dotsx, double 
   for(int k=0; k<Ndots; k++){
     I_Jy = Interpolate('Y', dotsx[k], dotsy[k]);
     Fy_k = (BU - I_Jy);
-    f += Fy_k * Kernel(ix - dotsx[k]) * Kernel(iy - dotsy[k])*1.0;
+    f += Fy_k * Kernel(ix - dotsx[k]) * Kernel(iy - dotsy[k])*1.19;
   }
   return f;
 }
