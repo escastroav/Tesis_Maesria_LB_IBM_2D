@@ -25,29 +25,31 @@ double LatticeBoltzmann::rho(int ix,int iy,bool UseNew){
   }
   return sum;
 }
-double LatticeBoltzmann::Fbpx(int Ndots, int ix, int iy,  double * dotsx, double * dotsy, double bulk, double Ux, double ds)
+double LatticeBoltzmann::Fbpx(int Ndots, int ix, int iy,  double * dotsx, double * dotsy, double bulk, double Ux, double ds, ComputeEpsilon & CE)
 {
   double I_Jx = 0;
   double BU = bulk * Ux;
   double Fx_k = 0;
   double f = 0;
+  //CE.BuildMatrix(dotsx, dotsy,ds); CE.SolveA();
   for(int k=0; k<Ndots; k++){
     I_Jx = Interpolate('X', dotsx[k], dotsy[k]);
-    Fx_k = (BU - I_Jx);
-    f += Fx_k * Kernel(ix - dotsx[k]) * Kernel(iy - dotsy[k])*ds*0.103;
+    Fx_k = (BU - I_Jx);    
+    f += Fx_k * Kernel(ix - dotsx[k]) * Kernel(iy - dotsy[k])*ds*CE.GetEpsilonK(k);
   }
   return f;
 }
-double LatticeBoltzmann::Fbpy(int Ndots, int ix, int iy, double * dotsx, double * dotsy, double bulk, double Uy, double ds)
+double LatticeBoltzmann::Fbpy(int Ndots, int ix, int iy, double * dotsx, double * dotsy, double bulk, double Uy, double ds, ComputeEpsilon & CE)
 {
   double I_Jy = 0;
   double BU = bulk * Uy;
   double Fy_k = 0;
   double f = 0;
+  //CE.BuildMatrix(dotsx, dotsy,ds); CE.SolveA();
   for(int k=0; k<Ndots; k++){
     I_Jy = Interpolate('Y', dotsx[k], dotsy[k]);
     Fy_k = (BU - I_Jy);
-    f += Fy_k * Kernel(ix - dotsx[k]) * Kernel(iy - dotsy[k])*ds*0.103;
+    f += Fy_k * Kernel(ix - dotsx[k]) * Kernel(iy - dotsy[k])*ds*CE.GetEpsilonK(k);
   }
   return f;
 }
@@ -68,50 +70,6 @@ double LatticeBoltzmann::Jy(int ix,int iy,bool UseNew){
   return sum;
 }
 // ---------------------- Interpolation -----------------------------------
-double LatticeBoltzmann::Kernel(double r)
-{
-  // r = x - x1 / (x0 - x1)
-  if(abs(r) < 0.5)
-    return (1.0+sqrt(1.0-3.0*r*r))/3.0;
-  else if(abs(r) >= 0.5 && abs(r) <= 1.5)
-    return (5.0-3.0*abs(r)-sqrt(1.0 - 3.0*(1.0-abs(r))*(1.0-abs(r)) ))/6.0;
-  else
-    return 0;
-}
-void LatticeBoltzmann::Neighbours(double* nb_x, double* nb_y, double x, double y)
-{
-  /*
-  7	8	9	10
-    
-  6	1	2	11
-    
-  5	0	3	12
-    
-  4	15	14	13
-  */
-  //first order:
-  nb_x[0] = floor(x);	nb_y[0] = floor(y);
-  nb_x[1] = nb_x[0];	nb_y[1] = nb_y[0]+1;
-  nb_x[2] = nb_x[0]+1;	nb_y[2] = nb_y[0]+1;
-  nb_x[3] = nb_x[0]+1;	nb_y[3] = nb_y[0];
-  //second order:
-  nb_x[4] = floor(x)-1;	nb_y[4] = floor(y)-1;
-  //left sied:
-  nb_x[5] = nb_x[4];	nb_y[5] = nb_y[4]+1;
-  nb_x[6] = nb_x[4];	nb_y[6] = nb_y[4]+2;
-  nb_x[7] = nb_x[4];	nb_y[7] = nb_y[4]+3;
-  //up side:
-  nb_x[8] = nb_x[4]+1;	nb_y[8] = nb_y[4]+3;
-  nb_x[9] = nb_x[4]+2;	nb_y[9] = nb_y[4]+3;
-  nb_x[10] = nb_x[4]+3;	nb_y[10] = nb_y[4]+3;
-  //right side:
-  nb_x[11] = nb_x[4]+3;	nb_y[11] = nb_y[4]+2;
-  nb_x[12] = nb_x[4]+3;	nb_y[12] = nb_y[4]+1;
-  nb_x[13] = nb_x[4]+3;	nb_y[13] = nb_y[4];
-  //down side: 
-  nb_x[14] = nb_x[4]+2;	nb_y[14] = nb_y[4];
-  nb_x[15] = nb_x[4]+1;	nb_y[15] = nb_y[4];
-}
 double LatticeBoltzmann::Interpolate(char field, double x, double y)
 {
   //field = "P" for rho, "X" for Jx, "Y" for Jy, else is zero.}
@@ -152,22 +110,22 @@ void LatticeBoltzmann::Start(double rho0,double Jx0,double Jy0, double Fx0, doub
 	f[n0]=feq(rho0,Jx0+0.5*Fx0,Jy0+0.5*Fy0,i);
       }
 }  
-void LatticeBoltzmann::Collision(int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius, double Ds){
+void LatticeBoltzmann::Collision(int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius, double Ds, ComputeEpsilon & CE){
   int ix,iy,i,n0; double rho0,Jx0,Jy0,Fx0,Fy0;
   for(ix=0;ix<Lx;ix++) //for each cell
     for(iy=0;iy<Ly;iy++){
       //compute the macroscopic fields on the cell
       rho0=rho(ix,iy,false);
+      Jx0=Jx(ix,iy,false); Jy0=Jy(ix,iy,false);
       if((ix >= floor(X-Radius-2) && ix <= ceil(X+Radius+2))
 	 &&
 	 (iy >= floor(Y-Radius-2) && iy <= ceil(Y+Radius+2)))
 	{
-	  Fx0=Fbpx(Ndots, ix, iy, dotsx, dotsy, bulk, Ux, Ds);//cout << Fx0 << " ";
-	  Fy0=Fbpy(Ndots, ix, iy, dotsx, dotsy, bulk, Uy, Ds);//cout << Fy0 << " ";
-	  //cout << endl;
+	  Fx0=Fbpx(Ndots, ix, iy, dotsx, dotsy, bulk, Ux, Ds, CE);//cout << Fx0 << " ";
+	  Fy0=Fbpy(Ndots, ix, iy, dotsx, dotsy, bulk, Uy, Ds, CE);//cout << Fy0 << " ";
 	}
       else{Fx0 = Fy0 = 0;}
-      Jx0=Jx(ix,iy,false)+0.5*Fx0; Jy0=Jy(ix,iy,false)+0.5*Fy0;
+      Jx0+=0.5*Fx0; Jy0+=0.5*Fy0;
       for(i=0;i<Q;i++){ //for each velocity vector
 	n0=n(ix,iy,i);
 	fnew[n0]=UmUtau*f[n0]+Utau*feq(rho0,Jx0,Jy0,i);
@@ -176,14 +134,15 @@ void LatticeBoltzmann::Collision(int Ndots, double * dotsx, double * dotsy, doub
 }
 void LatticeBoltzmann::ImposeFields(int t){
   int i,ix,iy,n0;
-  double lambda,omega,rho0,Jx0,Jy0; lambda=20.0; omega=2*M_PI/lambda*C;
+  double lambda,omega,rho0,Jx0,Jy0; lambda=10.0; omega=2*M_PI/lambda*C;
   //an oscillating source in the middle
-  ix=1; iy=Ly/2;
+  ix=1; iy=1;
+  for(iy=0;iy<Ly;iy++){
   rho0=10*sin(omega*t); Jx0=Jx(ix,iy,false); Jy0=Jy(ix,iy,false);
   for(i=0;i<Q;i++){
     n0=n(ix,iy,i);
     fnew[n0]=feq(rho0,Jx0,Jy0,i);
-  }
+  }}
 }
 void LatticeBoltzmann::Advection(void){
   int ix,iy,i,ixnext,iynext,n0,n0next;
@@ -196,17 +155,28 @@ void LatticeBoltzmann::Advection(void){
 	f[n0next]=fnew[n0]; //periodic boundaries
       }
 }
-void LatticeBoltzmann::Print(const char * NameFile,int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius){
+void LatticeBoltzmann::Print(const char * NameFile,int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius, double ds, ComputeEpsilon & CE){
   ofstream MyFile(NameFile); double rho0, Fx0, Fy0, Jx0, Jy0; int ix,iy;
   for(ix=1;ix<Lx-1;ix++){
     for(iy=1;iy<Ly-1;iy++){
       rho0=rho(ix,iy,true);
-      Jx0=Jx(ix,iy,true)+0.5*Fx0; Jy0=Jy(ix,iy,true)+0.5*Fy0;
+      Jx0=Jx(ix,iy,false); Jy0=Jy(ix,iy,false);
+      if((ix >= floor(X-Radius-2) && ix <= ceil(X+Radius+2))
+	 &&
+	 (iy >= floor(Y-Radius-2) && iy <= ceil(Y+Radius+2)))
+	{
+	  Fx0=Fbpx(Ndots, ix, iy, dotsx, dotsy, bulk, Ux, ds, CE);//cout << Fx0 << " ";
+	  Fy0=Fbpy(Ndots, ix, iy, dotsx, dotsy, bulk, Uy, ds, CE);//cout << Fy0 << " ";
+	}
+      else{Fx0 = Fy0 = 0;}
+      Jx0+=0.5*Fx0; Jy0+=0.5*Fy0;
       MyFile<<ix<<" "
 	    <<iy<<" "
 	    <<rho0<<" "
 	    <<Jx0<<" "
-	    <<Jy0<<endl;
+	    <<Jy0<<" "
+	    <<Fx0<<" "
+	    <<Fy0<<endl;
     }
     MyFile<<endl;
   }

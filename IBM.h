@@ -75,7 +75,7 @@ private:
 public:
   IBMDisk(int nDots, double r, double b, double m, double X, double Y);
   ~IBMDisk(void);
-  int GetNdots(){return NDots;};
+  int GetNdots(){return NDots;}; double GetDs(){return ds;};
   double GetMass(){return mass;}; double GetBulk(){return bulk;};
   double GetDensity(){return density;};
   double* GetDotsX(){return dots_x;};
