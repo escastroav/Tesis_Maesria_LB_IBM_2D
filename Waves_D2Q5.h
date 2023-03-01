@@ -7,15 +7,18 @@
 using namespace std;
 #include "ComputeEpsilon.h"
 //------------LB constants--------------------
-const int Lx=128;
-const int Ly=128;
+const double Lambda = 32;
+const int Lx= 128;//(int)(Lambda + 1);//((3 * Lambda) / 4 + 1);
+const int Ly= 128;
 
 const int Q=5;
 const double W0=1.0/3;
 
-const double C=0.5; // C<0.707 cells/click
+const double C=0.5; // C<0.707 cells
 const double C2=C*C;
 const double AUX0=1-3*C2*(1-W0);
+const double T = Lambda / C;
+const double Omega = 2*M_PI / T;
 
 const double tau=0.5;
 const double Utau=1.0/tau;
@@ -39,11 +42,12 @@ public:
   //Interpolation
   double Interpolate(char field, double x, double y);
   //Eq distribution
-  double feq(double rho0,double Jx0,double Jy0,int i);
-  void Collision(int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux,double Uy, double Radius, double Ds, ComputeEpsilon & CE);
-  void ImposeFields(int t);
+  double Speed(int ix, int iy, int X, int Y, double R, double v);
+  double feq(double rho0,double Jx0,double Jy0,int i,double c);
+  void Collision(int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux,double Uy, double Radius, double Ds, ComputeEpsilon & CE, double c, int t);
+  void ImposeFields(int t,double X, double Y, double Radius, double c);
   void Advection(void);
-  void Start(double rho0,double Jx0,double Jy0,double Fx0,double Fy0);
+  void Start(double rho0,double Jx0,double Jy0,double Fx0,double Fy0,double X, double Y, double Radius, double c);
   void Print(const char * NombreArchivo,int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius,double ds, ComputeEpsilon & CE);
 };  
 

@@ -25,6 +25,13 @@ double LatticeBoltzmann::rho(int ix,int iy,bool UseNew){
   }
   return sum;
 }
+double LatticeBoltzmann::Speed(int ix, int iy, int X, int Y, double R, double v)
+{
+  int ixp = ix - X; int iyp = iy - Y;
+  double r = ixp*ixp + iyp*iyp;
+  double w = 0.5;
+  return C - (C-v)*0.5*(1-tanh(w*(r-R*R)));
+}
 double LatticeBoltzmann::Fbpx(int Ndots, int ix, int iy,  double * dotsx, double * dotsy, double bulk, double Ux, double ds, ComputeEpsilon & CE)
 {
   double I_Jx = 0;
@@ -95,28 +102,31 @@ double LatticeBoltzmann::Interpolate(char field, double x, double y)
   return interp;
 }
 //----------------------equilibrium functions & BGK collision rules------------------------------------
-double  LatticeBoltzmann::feq(double rho0,double Jx0,double Jy0,int i){
+double  LatticeBoltzmann::feq(double rho0,double Jx0,double Jy0,int i,double c){
   if(i>0)
-    return 3*w[i]*(C2*rho0+Vx[i]*Jx0+Vy[i]*Jy0);
+    return 3*w[i]*(c*c*rho0+Vx[i]*Jx0+Vy[i]*Jy0);
   else
-    return rho0*AUX0;
+    return rho0*(1-3*c*c*(1-W0));
 }  
-void LatticeBoltzmann::Start(double rho0,double Jx0,double Jy0, double Fx0, double Fy0){
-  int ix,iy,i,n0;
+void LatticeBoltzmann::Start(double rho0,double Jx0,double Jy0, double Fx0, double Fy0, double X, double Y, double R, double c){
+  int ix,iy,i,n0; double c0;
   for(ix=0;ix<Lx;ix++) //for each cell
     for(iy=0;iy<Ly;iy++)
       for(i=0;i<Q;i++){ //on each direction
 	n0=n(ix,iy,i);
-	f[n0]=feq(rho0,Jx0+0.5*Fx0,Jy0+0.5*Fy0,i);
+	c0 = Speed(ix, iy, X, Y, R, c);
+	f[n0]=feq(rho0,Jx0+0.5*Fx0,Jy0+0.5*Fy0,i,c0);
       }
 }  
-void LatticeBoltzmann::Collision(int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius, double Ds, ComputeEpsilon & CE){
-  int ix,iy,i,n0; double rho0,Jx0,Jy0,Fx0,Fy0;
+void LatticeBoltzmann::Collision(int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius, double Ds, ComputeEpsilon & CE, double c, int t){
+  int ix,iy,i,n0; double rho0,Jx0,Jy0,Fx0,Fy0,c0;
   for(ix=0;ix<Lx;ix++) //for each cell
     for(iy=0;iy<Ly;iy++){
       //compute the macroscopic fields on the cell
-      rho0=rho(ix,iy,false);
-      Jx0=Jx(ix,iy,false); Jy0=Jy(ix,iy,false);
+      rho0=(ix==1 && iy ==1) ? sin(Omega*t) : rho(ix,iy,false);
+      Jx0=(ix==Lx-2 || iy == Ly-2) ? 0 : Jx(ix,iy,false); 
+      Jy0=Jy(ix,iy,false);
+      c0 = Speed(ix,iy,X,Y,Radius,c);
       if((ix >= floor(X-Radius-2) && ix <= ceil(X+Radius+2))
 	 &&
 	 (iy >= floor(Y-Radius-2) && iy <= ceil(Y+Radius+2)))
@@ -128,39 +138,77 @@ void LatticeBoltzmann::Collision(int Ndots, double * dotsx, double * dotsy, doub
       Jx0+=0.5*Fx0; Jy0+=0.5*Fy0;
       for(i=0;i<Q;i++){ //for each velocity vector
 	n0=n(ix,iy,i);
-	fnew[n0]=UmUtau*f[n0]+Utau*feq(rho0,Jx0,Jy0,i);
+	fnew[n0]=UmUtau*f[n0]+Utau*feq(rho0,Jx0,Jy0,i,c0);
       }
     }  
 }
-void LatticeBoltzmann::ImposeFields(int t){
+void LatticeBoltzmann::ImposeFields(int t,double X, double Y, double Radius, double c){
   int i,ix,iy,n0;
-  double lambda,omega,rho0,Jx0,Jy0; lambda=10.0; omega=2*M_PI/lambda*C;
+  double rho0,Jx0,Jy0,c0; 
   //an oscillating source in the middle
-  ix=1; iy=1;
+  ix=0; iy=0;
   for(iy=0;iy<Ly;iy++){
-  rho0=10*sin(omega*t); Jx0=Jx(ix,iy,false); Jy0=Jy(ix,iy,false);
+  ix=0;	  
+  rho0=0; 
+  c0 = Speed(ix,iy,X,Y,Radius,c);
+  Jx0=0; Jy0=Jy(ix,iy,false);
   for(i=0;i<Q;i++){
     n0=n(ix,iy,i);
-    fnew[n0]=feq(rho0,Jx0,Jy0,i);
-  }}
+    fnew[n0]=feq(rho0,Jx0,Jy0,i,c0);
+    }
+  ix=1;	  
+  rho0=10*sin(Omega*t); 
+  c0 = Speed(ix,iy,X,Y,Radius,c);
+  Jx0=0; Jy0=Jy(ix,iy,false);
+  for(i=0;i<Q;i++){
+    n0=n(ix,iy,i);
+    fnew[n0]=feq(rho0,Jx0,Jy0,i,c0);
+    }
+  ix=Lx-1;	  
+  rho0=0; 
+  c0 = Speed(ix,iy,X,Y,Radius,c);
+  Jx0=-Jx(ix,iy,false); Jy0=Jy(ix,iy,false);
+  for(i=0;i<Q;i++){
+    n0=n(ix,iy,i);
+    fnew[n0]=feq(rho0,Jx0,Jy0,i,c0);
+    }
+  }
 }
 void LatticeBoltzmann::Advection(void){
   int ix,iy,i,ixnext,iynext,n0,n0next;
-  for(ix=1;ix<Lx-1;ix++) //for each cell
-    for(iy=1;iy<Ly-1;iy++)
+  for(ix=0;ix<Lx;ix++) //for each cell
+    for(iy=0;iy<Ly;iy++)
       for(i=0;i<Q;i++){ //on each direction
-	ixnext= ix+Vx[i]; 
-	iynext= iy+Vy[i];
+	if(ix>0 && ix<Lx-1 && iy>0 && iy<Ly-1)
+	{
+		ixnext = ix+Vx[i]; iynext = iy+Vy[i];
+	}
+	else { ixnext = ix; iynext = iy;}
+	fnew[n(0,iy,i)] = fnew[n(1,iy,i)];
+	fnew[n(Lx-1,iy,i)] = fnew[n(Lx-2,iy,i)];
+	fnew[n(ix,0,i)] = fnew[n(ix,1,i)];
+	fnew[n(ix,Ly-1,i)] = fnew[n(ix,Ly-2,i)];
+	fnew[n(0,0,i)] = fnew[n(1,1,i)];
+	fnew[n(Lx-1,Ly-1,i)] = fnew[n(Lx-2,Lx-2,i)];
+	fnew[n(0,Ly-1,i)] = fnew[n(1,Ly-2,i)];
+	fnew[n(Lx-1,0,i)] = fnew[n(Lx-2,1,i)];
+	//ixnext= (ix+Vx[i]+Lx)%Lx;
+	//iynext= (iy+Vy[i]+Ly)%Ly;
 	n0=n(ix,iy,i); n0next=n(ixnext,iynext,i);
-	f[n0next]=fnew[n0]; //periodic boundaries
+	//if(iynext==0 || iynext==Ly-1) f[n0next] = 0 else f[n0next]=fnew[n0];
+	f[n0next]=fnew[n0];
+	//if(ixnext==0 || ixnext==Lx-1) f[n0next] = 0 else f[n0next]=fnew[n0];
+	//if(ixnext==0 || ixnext==Lx-1) f[n0next] = 0 else f[n0next]=fnew[n0];
       }
 }
 void LatticeBoltzmann::Print(const char * NameFile,int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius, double ds, ComputeEpsilon & CE){
   ofstream MyFile(NameFile); double rho0, Fx0, Fy0, Jx0, Jy0; int ix,iy;
-  for(ix=1;ix<Lx-1;ix++){
-    for(iy=1;iy<Ly-1;iy++){
+  MyFile.precision(8);
+    for(iy=1;iy<Ly;iy++){
+  	for(ix=1;ix<Lx;ix++){
       rho0=rho(ix,iy,true);
-      Jx0=Jx(ix,iy,false); Jy0=Jy(ix,iy,false);
+      Jx0=Jx(ix,iy,true); Jy0=Jy(ix,iy,true);
+      /**
       if((ix >= floor(X-Radius-2) && ix <= ceil(X+Radius+2))
 	 &&
 	 (iy >= floor(Y-Radius-2) && iy <= ceil(Y+Radius+2)))
@@ -169,14 +217,16 @@ void LatticeBoltzmann::Print(const char * NameFile,int Ndots, double * dotsx, do
 	  Fy0=Fbpy(Ndots, ix, iy, dotsx, dotsy, bulk, Uy, ds, CE);//cout << Fy0 << " ";
 	}
       else{Fx0 = Fy0 = 0;}
-      Jx0+=0.5*Fx0; Jy0+=0.5*Fy0;
-      MyFile<<ix<<" "
+      //Jx0+=0.5*Fx0; Jy0+=0.5*Fy0;
+      /**MyFile<<ix<<" "
 	    <<iy<<" "
 	    <<rho0<<" "
 	    <<Jx0<<" "
 	    <<Jy0<<" "
 	    <<Fx0<<" "
-	    <<Fy0<<endl;
+	    <<Fy0<<endl;**/
+      MyFile<<scientific<<rho0;
+      if(ix<Lx-1) MyFile<<" ";
     }
     MyFile<<endl;
   }
