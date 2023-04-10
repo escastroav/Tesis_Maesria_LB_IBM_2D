@@ -7,9 +7,9 @@
 using namespace std;
 #include "ComputeEpsilon.h"
 //------------LB constants--------------------
-const double Lambda = 32;
-const int Lx= 128;//(int)(Lambda + 1);//((3 * Lambda) / 4 + 1);
-const int Ly= 128;
+const double Lambda = 500; 
+const int Lx= Lambda/2 + 1;
+const int Ly= Lx;
 
 const int Q=5;
 const double W0=1.0/3;
@@ -19,6 +19,7 @@ const double C2=C*C;
 const double AUX0=1-3*C2*(1-W0);
 const double T = Lambda / C;
 const double Omega = 2*M_PI / T;
+const double K = 2*M_PI / Lambda;
 
 const double tau=0.5;
 const double Utau=1.0/tau;

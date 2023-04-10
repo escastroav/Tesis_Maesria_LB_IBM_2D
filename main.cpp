@@ -54,10 +54,10 @@ void Neighbours(double* nb_x, double* nb_y, double x, double y)
 int main(int argc, char * argv[]){
   //if(!(argc-1)){cout << "No timesteps!" << endl; return 0;}	
   LatticeBoltzmann Waves;
-  int Nodes =120;
+  int Nodes =63;
   double R = Nodes / (2*M_PI);
-   double mass = 100;
-  double vs = 0.3;//C=0.5
+   double mass = 500;
+   double vs = 0.5;//C=0.5
   double density = mass / (M_PI*R*R);
   double B = vs*vs*density;
   double F_max = 0;
@@ -66,18 +66,18 @@ int main(int argc, char * argv[]){
   int Y0 = Ly/2;
   ComputeEpsilon EpSolver(Nodes);
   IBMDisk Disk(Nodes, R, B, mass, X0, Y0);
-  int t,tmax=8*T;//atoi(argv[1]);
+  int t,tmax=2*T;//atoi(argv[1]);
   double rho0=0,Jx0=0,Jy0=0;
-  string outName = "Waves3D_st=";
+  string outName = "Inc3D_st=";
   string extension = ".dat";
   string frame = "";
-  //double p_max[Lx];
-  //double p_min[Lx]; 
-  //double pix = 0;
+  double p_max[Lx];
+  double p_min[Lx]; 
+  double pix = 0;
   //double T = 97 / C;
   int iy =  Ly/2; int ix = 0;
   //Rotores magnéticos moviéndose en paredes acústicas: Un estudio computacional
-  EpSolver.BuildMatrix(Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetDs()); EpSolver.SolveA();
+  //EpSolver.BuildMatrix(Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetDs()); EpSolver.SolveA();
   //Start
   Waves.Start(rho0,Jx0,Jy0,0,0,X0,Y0,R,vs);
   /**for(int ix=0;ix<Lx;ix++)
@@ -87,17 +87,17 @@ int main(int argc, char * argv[]){
   //Run
   for(t=0;t<tmax;t++){
     Waves.Collision(Nodes,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), R, Disk.GetDs(), EpSolver, vs, t);
-    //Waves.ImposeFields(t,X0,Y0,R,vs);
+    Waves.ImposeFields(t,X0,Y0,R,vs);
     Waves.Advection();
     frame = outName+to_string(t)+extension;
-    if(t%2==0) Waves.Print(frame.c_str(),Nodes,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), R, Disk.GetDs(), EpSolver);
+    //if(t%2==0) Waves.Print(frame.c_str(),Nodes,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), R, Disk.GetDs(), EpSolver);
     Disk.Fx(Waves); Disk.Fy(Waves);
-    F_amp = sqrt(Disk.GetFx()*Disk.GetFx() + Disk.GetFy()*Disk.GetFy());
+    F_amp = Disk.GetFx();//sqrt(Disk.GetFx()*Disk.GetFx() + Disk.GetFy()*Disk.GetFy());
     if(F_amp > F_max) F_max = F_amp;
     //Disk.UpdatePEFRL(Waves,1.0);
-    cout << t << " " << F_max << " " << F_amp << endl;
+    cout << t/T << " " << F_max << " " << F_amp << endl;
     //if(t==0)EpSolver.ShowEpsilon();cout << endl;cout << "-------------------" << endl;
-    /**if(t > 2*T)
+    /**if(t > 4*T)
     {
 	for(ix=1;ix<Lx-1;ix++)
 	{
@@ -109,7 +109,7 @@ int main(int argc, char * argv[]){
   }
   
   //Show
-	//for(ix=0;ix<Lx;ix++) cout << ix << " " << p_max[ix] << " " << p_min[ix] << endl;
+	//for(ix=1;ix<Lx-1;ix++) cout << ix << " " << p_max[ix] << " " << p_min[ix] << endl;
 //  Waves.Print("Waves2D.dat",Nodes,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), R, Disk.GetDs(), EpSolver);
  /**for(int k=0;k<Nodes;k++)
     {

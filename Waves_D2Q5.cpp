@@ -42,7 +42,7 @@ double LatticeBoltzmann::Fbpx(int Ndots, int ix, int iy,  double * dotsx, double
   for(int k=0; k<Ndots; k++){
     I_Jx = Interpolate('X', dotsx[k], dotsy[k]);
     Fx_k = (BU - I_Jx);    
-    f += Fx_k * Kernel(ix - dotsx[k]) * Kernel(iy - dotsy[k])*ds*CE.GetEpsilonK(k);
+    f += Fx_k * Kernel(ix - dotsx[k]) * Kernel(iy - dotsy[k]);//*ds*CE.GetEpsilonK(k);
   }
   return f;
 }
@@ -56,7 +56,7 @@ double LatticeBoltzmann::Fbpy(int Ndots, int ix, int iy, double * dotsx, double 
   for(int k=0; k<Ndots; k++){
     I_Jy = Interpolate('Y', dotsx[k], dotsy[k]);
     Fy_k = (BU - I_Jy);
-    f += Fy_k * Kernel(ix - dotsx[k]) * Kernel(iy - dotsy[k])*ds*CE.GetEpsilonK(k);
+    f += Fy_k * Kernel(ix - dotsx[k]) * Kernel(iy - dotsy[k]);//*ds*CE.GetEpsilonK(k);
   }
   return f;
 }
@@ -115,6 +115,8 @@ void LatticeBoltzmann::Start(double rho0,double Jx0,double Jy0, double Fx0, doub
       for(i=0;i<Q;i++){ //on each direction
 	n0=n(ix,iy,i);
 	c0 = Speed(ix, iy, X, Y, R, c);
+	//rho0 = sin(K*ix);
+	Jx0 = -C*sin(K*ix);
 	f[n0]=feq(rho0,Jx0+0.5*Fx0,Jy0+0.5*Fy0,i,c0);
       }
 }  
@@ -123,19 +125,26 @@ void LatticeBoltzmann::Collision(int Ndots, double * dotsx, double * dotsy, doub
   for(ix=0;ix<Lx;ix++) //for each cell
     for(iy=0;iy<Ly;iy++){
       //compute the macroscopic fields on the cell
-      rho0=(ix==1 && iy ==1) ? sin(Omega*t) : rho(ix,iy,false);
-      Jx0=(ix==Lx-2 || iy == Ly-2) ? 0 : Jx(ix,iy,false); 
+      //if(ix==10)rho0 = sin(Omega*t);
+      rho0=rho(ix,iy,false);
+      //else if(ix==Lx-2)rho0 = -sin(Omega*t);
+      //else if(ix==1||ix==Lx-2)rho0 = 0;
+      //rho0=(ix==Lx/4+1&&t<T) ? sin(Omega*t) : rho(ix,iy,false);
+      Jx0= Jx(ix,iy,false);
+      //Jx0=(ix==0||ix==Lx-1) ? 0 : Jx(ix,iy,false);
       Jy0=Jy(ix,iy,false);
-      c0 = Speed(ix,iy,X,Y,Radius,c);
+      c0=Speed(ix,iy,X,Y,Radius,c);
       if((ix >= floor(X-Radius-2) && ix <= ceil(X+Radius+2))
 	 &&
 	 (iy >= floor(Y-Radius-2) && iy <= ceil(Y+Radius+2)))
 	{
-	  Fx0=Fbpx(Ndots, ix, iy, dotsx, dotsy, bulk, Ux, Ds, CE);//cout << Fx0 << " ";
-	  Fy0=Fbpy(Ndots, ix, iy, dotsx, dotsy, bulk, Uy, Ds, CE);//cout << Fy0 << " ";
+	  Fx0=Fbpx(Ndots, ix, iy, dotsx, dotsy, bulk, Ux, Ds, CE);	 
+	  Fy0=Fbpy(Ndots, ix, iy, dotsx, dotsy, bulk, Uy, Ds, CE);	 
 	}
       else{Fx0 = Fy0 = 0;}
+      //if(t<T/2)rho0+=0.5*exp(-(ix-Lx/4)*(ix-Lx/4)*0.5)*sin(Omega*t);
       Jx0+=0.5*Fx0; Jy0+=0.5*Fy0;
+      //Jx0-=0.25*(2-tanh(10*(ix-Lx/4))+tanh(10*(ix-3*Lx/4)))*Jx0; 
       for(i=0;i<Q;i++){ //for each velocity vector
 	n0=n(ix,iy,i);
 	fnew[n0]=UmUtau*f[n0]+Utau*feq(rho0,Jx0,Jy0,i,c0);
@@ -148,66 +157,70 @@ void LatticeBoltzmann::ImposeFields(int t,double X, double Y, double Radius, dou
   //an oscillating source in the middle
   ix=0; iy=0;
   for(iy=0;iy<Ly;iy++){
-  ix=0;	  
-  rho0=0; 
-  c0 = Speed(ix,iy,X,Y,Radius,c);
-  Jx0=0; Jy0=Jy(ix,iy,false);
-  for(i=0;i<Q;i++){
-    n0=n(ix,iy,i);
-    fnew[n0]=feq(rho0,Jx0,Jy0,i,c0);
-    }
   ix=1;	  
-  rho0=10*sin(Omega*t); 
+  rho0= sin(Omega*t); 
   c0 = Speed(ix,iy,X,Y,Radius,c);
-  Jx0=0; Jy0=Jy(ix,iy,false);
+  Jx0= Jx(ix,iy,false); Jy0=Jy(ix,iy,false);
   for(i=0;i<Q;i++){
     n0=n(ix,iy,i);
     fnew[n0]=feq(rho0,Jx0,Jy0,i,c0);
     }
+  /**ix=1;	  
+  rho0= (t<2*T) ? sin(Omega*t) : rho(ix,iy,false); 
+  c0 = Speed(ix,iy,X,Y,Radius,c);
+  Jx0 = (t<2*T) ? C*sin(Omega*t) : Jx(ix,iy,false); 
+  Jy0=Jy(ix,iy,false);
+  for(i=0;i<Q;i++){
+    n0=n(ix,iy,i);
+    fnew[n0]=feq(rho0,Jx0,Jy0,i,c0);
+    }**/
+  ix=Lx-2;	  
+  rho0= -sin(Omega*t); 
+  c0 = Speed(ix,iy,X,Y,Radius,c);
+  Jx0= Jx(ix,iy,false); Jy0=Jy(ix,iy,false);
+  for(i=0;i<Q;i++){
+    n0=n(ix,iy,i);
+    fnew[n0]=feq(rho0,Jx0,Jy0,i,c0);
+    }/**
   ix=Lx-1;	  
-  rho0=0; 
+  rho0= 0; 
   c0 = Speed(ix,iy,X,Y,Radius,c);
-  Jx0=-Jx(ix,iy,false); Jy0=Jy(ix,iy,false);
+  Jx0= 0; Jy0=Jy(ix,iy,false);
   for(i=0;i<Q;i++){
     n0=n(ix,iy,i);
     fnew[n0]=feq(rho0,Jx0,Jy0,i,c0);
-    }
+    }**/
   }
 }
 void LatticeBoltzmann::Advection(void){
   int ix,iy,i,ixnext,iynext,n0,n0next;
+  double D = 1.0;
   for(ix=0;ix<Lx;ix++) //for each cell
     for(iy=0;iy<Ly;iy++)
       for(i=0;i<Q;i++){ //on each direction
-	if(ix>0 && ix<Lx-1 && iy>0 && iy<Ly-1)
-	{
-		ixnext = ix+Vx[i]; iynext = iy+Vy[i];
-	}
-	else { ixnext = ix; iynext = iy;}
-	fnew[n(0,iy,i)] = fnew[n(1,iy,i)];
-	fnew[n(Lx-1,iy,i)] = fnew[n(Lx-2,iy,i)];
-	fnew[n(ix,0,i)] = fnew[n(ix,1,i)];
-	fnew[n(ix,Ly-1,i)] = fnew[n(ix,Ly-2,i)];
-	fnew[n(0,0,i)] = fnew[n(1,1,i)];
-	fnew[n(Lx-1,Ly-1,i)] = fnew[n(Lx-2,Lx-2,i)];
-	fnew[n(0,Ly-1,i)] = fnew[n(1,Ly-2,i)];
-	fnew[n(Lx-1,0,i)] = fnew[n(Lx-2,1,i)];
-	//ixnext= (ix+Vx[i]+Lx)%Lx;
-	//iynext= (iy+Vy[i]+Ly)%Ly;
+	ixnext= (ix+Vx[i]+Lx)%Lx;
+	iynext= (iy+Vy[i]+Ly)%Ly;
 	n0=n(ix,iy,i); n0next=n(ixnext,iynext,i);
-	//if(iynext==0 || iynext==Ly-1) f[n0next] = 0 else f[n0next]=fnew[n0];
 	f[n0next]=fnew[n0];
-	//if(ixnext==0 || ixnext==Lx-1) f[n0next] = 0 else f[n0next]=fnew[n0];
-	//if(ixnext==0 || ixnext==Lx-1) f[n0next] = 0 else f[n0next]=fnew[n0];
+	//Bounce back with coefficient D
+	fnew[n(0,iy,1)] = D*f[n(0,iy,3)];
+	fnew[n(0,iy,2)] = D*f[n(0,iy,4)];
+	fnew[n(0,iy,3)] = D*f[n(0,iy,1)];
+	fnew[n(0,iy,4)] = D*f[n(0,iy,2)];
+	fnew[n(Lx-1,iy,1)] = D*f[n(Lx-1,iy,3)];
+	fnew[n(Lx-1,iy,2)] = D*f[n(Lx-1,iy,4)];
+	fnew[n(Lx-1,iy,3)] = D*f[n(Lx-1,iy,1)];
+	fnew[n(Lx-1,iy,4)] = D*f[n(Lx-1,iy,2)];
       }
 }
 void LatticeBoltzmann::Print(const char * NameFile,int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius, double ds, ComputeEpsilon & CE){
-  ofstream MyFile(NameFile); double rho0, Fx0, Fy0, Jx0, Jy0; int ix,iy;
+  ofstream MyFile(NameFile); double rho0, Fx0, Fy0, Jx0, Jy0, r0; int ix,iy;
   MyFile.precision(8);
-    for(iy=1;iy<Ly;iy++){
+    for(iy=0;iy<Ly;iy++){
   	for(ix=1;ix<Lx;ix++){
-      rho0=rho(ix,iy,true);
-      Jx0=Jx(ix,iy,true); Jy0=Jy(ix,iy,true);
+      rho0=rho(ix,iy,false);
+      Jx0=Jx(ix,iy,false); Jy0=Jy(ix,iy,false);
+      r0=(ix==Lx/2 && iy==Ly/2) ? 1 : sqrt((ix-Lx/2)*(ix-Lx/2)+(iy-Ly/2)*(iy-Ly/2));
       /**
       if((ix >= floor(X-Radius-2) && ix <= ceil(X+Radius+2))
 	 &&
@@ -225,8 +238,8 @@ void LatticeBoltzmann::Print(const char * NameFile,int Ndots, double * dotsx, do
 	    <<Jy0<<" "
 	    <<Fx0<<" "
 	    <<Fy0<<endl;**/
-      MyFile<<scientific<<rho0;
-      if(ix<Lx-1) MyFile<<" ";
+      MyFile<<scientific<<rho0;//(Jx0*(ix-Lx/2)/r0 + Jy0*(iy-Ly/2)/r0);
+     if(ix<Lx-1)MyFile<<" "; 
     }
     MyFile<<endl;
   }
