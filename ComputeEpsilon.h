@@ -4,13 +4,13 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
-#include <Eigen/Dense>
+//#include <Eigen/Dense>
 
 using namespace std;
 
 double Kernel(double r);
 void Neighbours(double* nb_x, double* nb_y, double x, double y);
-class ComputeEpsilon
+/**class ComputeEpsilon
 {
 private:
   int Nodes;
@@ -26,4 +26,4 @@ public:
   void SolveA();
   void ShowEpsilon(){cout << epsilon_sol;};
   void ShowA(){cout << A;};
-};
+};**/

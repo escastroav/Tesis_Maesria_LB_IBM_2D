@@ -27,8 +27,9 @@ private:
   double *normals_x;
   double *normals_y;
   // Molecular dynamics
-  double mass; double bulk; double density;
+  double mass; double bulk; double density; double vsound;
   double fx; double fy;
+  double fx_J; double fy_J;
   double Vx; double Vy;
   void Update_Vx(double dt, double coeff){Vx+=fx*(dt*coeff/mass);};
   void Update_Vy(double dt, double coeff){Vy+=fy*(dt*coeff/mass);};
@@ -73,7 +74,7 @@ private:
       }
   }
 public:
-  IBMDisk(int nDots, double r, double b, double m, double X, double Y);
+  IBMDisk(int nDots, double r, double b, double m, double vs, double X, double Y);
   ~IBMDisk(void);
   int GetNdots(){return NDots;}; double GetDs(){return ds;};
   double GetMass(){return mass;}; double GetBulk(){return bulk;};
@@ -85,10 +86,20 @@ public:
   double GetVx(){return Vx;};
   double GetVy(){return Vy;};
   double GetFx(){return fx;};
+  double GetFx_J(){return fx_J;};
+  double GetFy_J(){return fy_J;};
   double GetFy(){return fy;};
   //Force
-  void Fx(LatticeBoltzmann & LB);
-  void Fy(LatticeBoltzmann & LB);
+  double Fx_p(LatticeBoltzmann & LB);
+  double Fx_p2_v2(LatticeBoltzmann & LB);
+  double Fx_J(LatticeBoltzmann & LB);
+  double Fy_p(LatticeBoltzmann & LB);
+  double Fy_p2_v2(LatticeBoltzmann & LB);
+  double Fy_J(LatticeBoltzmann & LB);
+  double Fx_ib(LatticeBoltzmann & LB,double B, double Ux,double ds,double Rad);
+  double Fy_ib(LatticeBoltzmann & LB,double B, double Uy,double ds,double Rad);
+  double SoundSpeed(double x, double y, double X, double Y, double R, double c0, double c);
+  void MeasureForce(LatticeBoltzmann & LB, int t, int tmax, double T, double & F_min, double & F_max, double & F_add);
   //Integrator
   void UpdatePEFRL(LatticeBoltzmann & LB, double dt);
   //PrintDots
