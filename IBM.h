@@ -68,9 +68,9 @@ private:
     for(k = 0; k < NDots; k++)
       {
 	dots_x[k] = X_center + radius * cos(dtheta * k);
-	normals_x[k] = (-1.0) * cos(dtheta * (k + 0.5));
+	normals_x[k] = cos(dtheta * (k + 0.5));
 	dots_y[k] = Y_center + radius * sin(dtheta * k);
-	normals_y[k] = (-1.0) * sin(dtheta * (k + 0.5));
+	normals_y[k] = sin(dtheta * (k + 0.5));
       }
   }
 public:

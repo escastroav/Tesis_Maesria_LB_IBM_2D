@@ -232,7 +232,7 @@ void LatticeBoltzmann::PrintBoundary(const char * NameFile, int Ndots, double * 
   MyFile.close();
 }
 void LatticeBoltzmann::Print(const char * NameFile,int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius, double ds,double v){
-  ofstream MyFile(NameFile); double rho0, Fx0, Fy0, Jx0, Jy0, C2; int ix,iy;
+  ofstream MyFile(NameFile); double rho0, Fx0, Fy0, Jx0, Jy0, c2; int ix,iy;
   MyFile.precision(8);
   for(iy=0;iy<Ly;iy++){
     for(ix=1;ix<Lx;ix++){
@@ -240,8 +240,8 @@ void LatticeBoltzmann::Print(const char * NameFile,int Ndots, double * dotsx, do
       //Jx0=Jx(ix,iy,true); Jy0=Jy(ix,iy,true);
       //Fx0=Fbpx(Ndots, ix, iy, dotsx, dotsy, bulk, Ux, ds);	 
       //Fy0=Fbpy(Ndots, ix, iy, dotsx, dotsy, bulk, Uy, ds);
-      C2 = Speed(ix,iy,X,Y,Radius,v)*Speed(ix,iy,X,Y,Radius,v);
-      MyFile<<scientific<<Pi(ix,iy,true);
+      c2 = Speed(ix,iy,X,Y,Radius,v);
+      MyFile<<scientific<<c2;
       if(ix<Lx-1)MyFile<<" "; 
     }
     MyFile<<endl;

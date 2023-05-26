@@ -87,13 +87,13 @@ int main(int argc, char * argv[]){
   double ds = 1.0;  
   int Nodes = (int)( 2 * M_PI * R / ds );
   double Volume = M_PI * R * R; 
-  double vs = 0.559016994374948;//(1700/1500) *C; //polystyrene / water with C_o = 1/3
+  double vs = 0.25;//(1700/1500) *C; //polystyrene / water with C_o = 1/3
   double density = 500 / Volume;//(1050/1000) / C2 ; // polystyrene / water with rho = B / C^2
   double B = density * vs * vs; // in the code is defined B_o = 1 for water
   double mass = density * Volume;
   int X0 = Lx/4;
   int Y0 = Ly/2;
-  double Po = 1/C2;
+  double Po = 1.0/C2;
   IBMDisk Disk(Nodes, R, B, mass, vs, X0, Y0);
   int t,tmax=10*T;
   double k = 2 * M_PI / Lambda;
@@ -129,12 +129,12 @@ int main(int argc, char * argv[]){
     //if(t >= tmax - T - 1) FL_add += F_lin / T;
     //if(t >= 3*T) FJ_add += FJ_amp / T;
     //Disk.MeasureForce(Waves, t, tmax, T, F_min, F_max, F_add);
-    /**cout << scientific
-         << t/T << "\t"
-	 << F_lin << "\t"
-	 << F_sqr << "\t"
-	 << 0.5*(F_lin_max + F_lin_min) << "\t"
-	 << 0.5*(F_sqr_max + F_sqr_min) << endl;**/
+    //cout << scientific
+    //     << t/T << "\t"
+    //     << F_lin << "\t"
+    // << F_sqr << "\t"
+    //	 << 0.5*(F_lin_max + F_lin_min) << "\t"
+    //	 << 0.5*(F_sqr_max + F_sqr_min) << endl;
     //Disk.UpdatePEFRL(Waves,1.0);
     //frame = outName+to_string(t)+extension;
     //if(t%2==0) Waves.Print(frame.c_str(),Nodes,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), R, Disk.GetDs(),vs);
