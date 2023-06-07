@@ -32,6 +32,16 @@ double LatticeBoltzmann::Speed(int ix, int iy, int X, int Y, double R, double v)
   double w = 1.0/3.0;
   return C - (C-v)*0.5*(1-tanh(w*(r-R*R)));
 }
+double LatticeBoltzmann::Speed_Ellipse(int ix, int iy, int X, int Y, double Phi, double A, double B, double v)
+{
+  int ixp = ix - X; int iyp = iy - Y;
+  double xr = ixp*cos(Phi)+iyp*sin(Phi);
+  double yr = iyp*cos(Phi)-ixp*sin(Phi);
+  double xx = B*xr*xr/A;
+  double yy = A*yr*yr/B;
+  double w = 1.0/3.0;
+  return C - (C-v)*0.5*(1-tanh(w*(xx+yy-A*B)));
+}
 double LatticeBoltzmann::Fbpx(int Ndots, int ix, int iy,  double * dotsx, double * dotsy, double bulk, double Ux, double ds)
 {
   double I_Jx = 0;
@@ -131,7 +141,7 @@ void LatticeBoltzmann::Start(double rho0,double Jx0,double Jy0, double Fx0, doub
 	f[n0]=feq(rho0,Jx0+0.5*Fx0,Jy0+0.5*Fy0,i,c0);
       }
 }
-void LatticeBoltzmann::Collision(int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius, double Ds, double c, int t){
+void LatticeBoltzmann::Collision(int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double phi, double Radius, double A0, double B0, double Ds, double c, int t){
   int ix,iy,i,n0; double rho0,Jx0,Jy0,Fx0,Fy0,c0,Rxy2;
   for(ix=0;ix<Lx;ix++) //for each cell
     for(iy=0;iy<Ly;iy++){
@@ -139,7 +149,8 @@ void LatticeBoltzmann::Collision(int Ndots, double * dotsx, double * dotsy, doub
       rho0=rho(ix,iy,false);
       Jx0= Jx(ix,iy,false);
       Jy0=Jy(ix,iy,false);
-      c0=Speed(ix,iy,X,Y,Radius,c);
+      //c0=Speed(ix,iy,X,Y,Radius,c);
+      c0=Speed_Ellipse(ix, iy, X, Y, phi, A0, B0, c);
       //Rxy2 = (ix - X)*(ix - X) + (iy - Y)*(iy - Y);
         //if((ix >= floor(X-Radius-2) && ix <= ceil(X+Radius+2))
 	//   &&
@@ -186,14 +197,14 @@ void LatticeBoltzmann::ImposeFields(int t,double X, double Y, double Radius, dou
     n0=n(ix,iy,i);
     fnew[n0]=feq(rho0,Jx0,Jy0,i,c0);
     }
-  ix=Lx-2;	  
+  /**ix=Lx-2;	  
   rho0= -Po*sin(Omega*t); 
   c0 = Speed(ix,iy,X,Y,Radius,c);
   Jx0= Jx(ix,iy,false); Jy0=Jy(ix,iy,false);
   for(i=0;i<Q;i++){
     n0=n(ix,iy,i);
     fnew[n0]=feq(rho0,Jx0,Jy0,i,c0);
-    }
+    }**/
   }
 }
 void LatticeBoltzmann::Advection(void){

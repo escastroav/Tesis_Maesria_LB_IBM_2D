@@ -1,14 +1,15 @@
 #include "IBM.h"
 
-IBMDisk::IBMDisk(int nDots, double r, double b, double m, double vs, double X, double Y)
+IBMDisk::IBMDisk(int nDots, double r, double A0, double B0, double b, double m, double vs, double X, double Y)
 {
-  NDots = nDots; radius = r; X_center = X; Y_center = Y;
+  NDots = nDots; radius = r; A = A0; B = B0; X_center = X; Y_center = Y;
   dots_x = new double [NDots]; dots_y = new double [NDots];
   normals_x = new double [NDots];normals_y = new double [NDots];
   fx = 0; fy = 0; Vx = 0; Vy = 0; mass = m; bulk = b;
   density = mass / (M_PI*radius*radius);
   vsound = vs;
-  LocateDots();
+  LocateDots_Ellipse();
+  LocateNormals();
 }
 IBMDisk::~IBMDisk(void)
 {
@@ -49,26 +50,6 @@ double IBMDisk::Fy_J(LatticeBoltzmann & LB)
     }
   return fy_tmp;
 }
-double IBMDisk::Fy_p(LatticeBoltzmann & LB)
-{
-  double fy_tmp = 0;
-  double mid_dotx = 0;
-  double mid_doty = 0; 
-  double I_p = 0;
-  for(int k = 0; k < NDots-1; k++)
-    {
-      mid_dotx = (dots_x[k+1] + dots_x[k]) * 0.5;
-      mid_doty = (dots_y[k+1] + dots_y[k]) * 0.5;      
-      I_p = LB.Interpolate('P', mid_dotx, mid_doty);
-      fy_tmp += I_p * normals_y[k] * ds;
-    }
-  mid_dotx = (dots_x[0] + dots_x[NDots-1]) * 0.5;
-  mid_doty = (dots_y[0] + dots_y[NDots-1]) * 0.5;      
-  I_p = LB.Interpolate('P', mid_dotx, mid_doty);
-  fy_tmp += - I_p * normals_y[NDots-1] * ds;
-  
-  return fy_tmp;
-}
 double IBMDisk::Fx_p(LatticeBoltzmann & LB)
 {
   double fx_tmp = 0;
@@ -88,6 +69,26 @@ double IBMDisk::Fx_p(LatticeBoltzmann & LB)
   fx_tmp += - I_p * normals_x[NDots-1] * ds;
   
   return fx_tmp;
+}
+double IBMDisk::Fy_p(LatticeBoltzmann & LB)
+{
+  double fy_tmp = 0;
+  double mid_dotx = 0;
+  double mid_doty = 0; 
+  double I_p = 0;
+  for(int k = 0; k < NDots-1; k++)
+    {
+      mid_dotx = (dots_x[k+1] + dots_x[k]) * 0.5;
+      mid_doty = (dots_y[k+1] + dots_y[k]) * 0.5;      
+      I_p = LB.Interpolate('P', mid_dotx, mid_doty);
+      fy_tmp += I_p * normals_y[k] * ds;
+    }
+  mid_dotx = (dots_x[0] + dots_x[NDots-1]) * 0.5;
+  mid_doty = (dots_y[0] + dots_y[NDots-1]) * 0.5;      
+  I_p = LB.Interpolate('P', mid_dotx, mid_doty);
+  fy_tmp += - I_p * normals_y[NDots-1] * ds;
+  
+  return fy_tmp;
 }
 double IBMDisk::Fx_p2_v2(LatticeBoltzmann & LB)
 {

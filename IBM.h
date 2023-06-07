@@ -20,8 +20,10 @@ class IBMDisk{
 private:
   int NDots;
   double radius;
+  double A, B;
   double ds;
   double X_center; double Y_center;
+  double phi;
   double *dots_x;
   double *dots_y;
   double *normals_x;
@@ -61,20 +63,63 @@ private:
     if(!isOut)
       Y_center += Vy*(dt*coeff);
   };
-  void LocateDots(void)
+  void Rotate(void)
+  {
+    double rel_x, rel_y;
+    for(int k=0; k<NDots; k++){
+      rel_x = dots_x[k] - X_center; rel_y = dots_y[k] - Y_center;
+      rel_x = rel_x * cos(phi) + rel_y * sin(phi);
+      rel_y = rel_y * cos(phi) - rel_x * sin(phi);
+      dots_x[k] = X_center + rel_x;
+      dots_y[k] = Y_center + rel_y;
+    } 
+  };
+  void LocateDots_Circle(void)
   {
     int k = 0; double dtheta = 2.0*M_PI / NDots;
     ds = radius * dtheta;
     for(k = 0; k < NDots; k++)
       {
 	dots_x[k] = X_center + radius * cos(dtheta * k);
-	normals_x[k] = cos(dtheta * (k + 0.5));
+	//normals_x[k] = cos(dtheta * ((double)k + 0.5));
 	dots_y[k] = Y_center + radius * sin(dtheta * k);
-	normals_y[k] = sin(dtheta * (k + 0.5));
+	//normals_y[k] = sin(dtheta * ((double)k + 0.5));
+	//cout << k << " " << normals_x[k] << " " << normals_y[k] << endl;
+      }    
+  }
+  void LocateDots_Ellipse(void)
+  {
+    int k = 0; double dtheta = 2.0*M_PI / NDots;
+    ds = radius * dtheta;
+    for(k = 0; k < NDots; k++)
+      {
+	dots_x[k] = X_center + A * cos(dtheta * k);
+	dots_y[k] = Y_center + B * sin(dtheta * k);
+      }    
+  }
+  void LocateNormals(void)
+  {
+    int k = 0; double dtheta = 2.0*M_PI / NDots;
+    double diff_x, diff_y, diff;
+    ds = radius * dtheta;
+    for(k = 0; k < NDots-1; k++)
+      {
+	diff_x = dots_x[k+1] - dots_x[k];
+	diff_y = dots_y[k+1] - dots_y[k];
+	diff = sqrt(diff_x*diff_x + diff_y*diff_y);
+	normals_x[k] = diff_y / diff;
+	normals_y[k] = -diff_x / diff;
+	//cout << k << " " << normals_x[k] << " " << normals_y[k] << endl;
       }
+    diff_x = dots_x[0] - dots_x[NDots - 1];
+    diff_y = dots_y[0] - dots_y[NDots - 1];
+    diff = sqrt(diff_x*diff_x + diff_y*diff_y);
+    normals_x[NDots - 1] = diff_y / diff;
+    normals_y[NDots - 1] = -diff_x / diff;
+    //cout << k << " " << normals_x[NDots-1] << " " << normals_y[NDots - 1] << endl;
   }
 public:
-  IBMDisk(int nDots, double r, double b, double m, double vs, double X, double Y);
+  IBMDisk(int nDots, double r, double A0, double B0, double b, double m, double vs, double X, double Y);
   ~IBMDisk(void);
   int GetNdots(){return NDots;}; double GetDs(){return ds;};
   double GetMass(){return mass;}; double GetBulk(){return bulk;};
@@ -96,6 +141,10 @@ public:
   double Fy_p(LatticeBoltzmann & LB);
   double Fy_p2_v2(LatticeBoltzmann & LB);
   double Fy_J(LatticeBoltzmann & LB);
+  //Torque
+  // double Tz_p(LatticeBoltzmann & LB);
+  // double Tz_p2_v2(LatticeBoltzmann & LB);
+  // double Tz_J(LatticeBoltzmann & LB);
   double Fx_ib(LatticeBoltzmann & LB,double B, double Ux,double ds,double Rad);
   double Fy_ib(LatticeBoltzmann & LB,double B, double Uy,double ds,double Rad);
   double SoundSpeed(double x, double y, double X, double Y, double R, double c0, double c);

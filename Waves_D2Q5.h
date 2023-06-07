@@ -8,7 +8,7 @@ using namespace std;
 #include "ComputeEpsilon.h"
 //------------LB constants--------------------
 const double Lambda = 500; 
-const int Lx= Lambda/2+1;
+const int Lx= 251;
 const int Ly= 64;
 
 const int Q=5;
@@ -45,8 +45,9 @@ public:
   double Interpolate(char field, double x, double y);
   //Eq distribution
   double Speed(int ix, int iy, int X, int Y, double R, double v);
+  double Speed_Ellipse(int ix, int iy, int X, int Y, double Phi, double A, double B, double v);
   double feq(double rho0,double Jx0,double Jy0,int i,double c);
-  void Collision(int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux,double Uy, double Radius, double Ds, double c, int t);
+  void Collision(int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux,double Uy, double phi, double Radius, double A0, double B0, double Ds, double c, int t);
   void ImposeFields(int t,double X, double Y, double Radius, double c, double Po);
   void Advection(void);
   void Start(double rho0,double Jx0,double Jy0,double Fx0,double Fy0,double X, double Y, double Radius, double c);

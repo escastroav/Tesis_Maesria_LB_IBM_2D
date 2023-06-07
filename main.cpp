@@ -84,17 +84,20 @@ void Neighbours(double* nb_x, double* nb_y, double x, double y)
 int main(int argc, char * argv[]){
   LatticeBoltzmann Waves;
   double R = 10.0; // 1 dx => 3 um, 1 dt = 2 ns
-  double ds = 1.0;  
+  double a0 = 30.0;
+  double b0 = 10.0;
+  double Phi = 0.0;
+  double ds = 1.0;
   int Nodes = (int)( 2 * M_PI * R / ds );
   double Volume = M_PI * R * R; 
-  double vs = 0.25;//(1700/1500) *C; //polystyrene / water with C_o = 1/3
+  double vs = 0.241718363483469;//(1700/1500) *C; //polystyrene / water with C_o = 1/3
   double density = 500 / Volume;//(1050/1000) / C2 ; // polystyrene / water with rho = B / C^2
   double B = density * vs * vs; // in the code is defined B_o = 1 for water
   double mass = density * Volume;
   int X0 = Lx/4;
   int Y0 = Ly/2;
   double Po = 1.0/C2;
-  IBMDisk Disk(Nodes, R, B, mass, vs, X0, Y0);
+  IBMDisk Disk(Nodes, R, a0, b0, B, mass, vs, X0, Y0);
   int t,tmax=10*T;
   double k = 2 * M_PI / Lambda;
   double F_lin=0, F_lin_max=0, F_lin_min=0;
@@ -104,14 +107,13 @@ int main(int argc, char * argv[]){
   string extension = ".dat";
   string frame = "";
   int iy = Ly/2; int ix = 0;
-    
   cout.precision(8);
   //cout << "P_o" << "\t" << "R" << "\t" << "k" << "\t" << "F_min" << "\t" << "F_max" << "\t" << "<F>" << endl;
   //Start
   Waves.Start(rho0,Jx0,Jy0,0,0,X0,Y0,R,vs);
   //Run
   for(t=0;t<tmax;t++){
-    Waves.Collision(Nodes,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), R, Disk.GetDs(), vs, t);
+    Waves.Collision(Nodes,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), Phi, R, a0, b0, Disk.GetDs(), vs, t);
     Waves.ImposeFields(t,X0,Y0,R,vs,Po);
     Waves.Advection();
     //X positions are relative to the wavelength!
@@ -141,6 +143,8 @@ int main(int argc, char * argv[]){
   }
   
   //Show
+  //for(ix=2;ix<Lx-2;ix++) cout << ix << " " << p_max[ix] << " " << p_min[ix] <<endl;
+  
   //cout << scientific
     //<< Po << "\t"
        //<< R << "\t"
@@ -149,10 +153,11 @@ int main(int argc, char * argv[]){
        //<< F_max << "\t"
        //<< F_add << endl;// << "\t"
        //<< FJ_add << endl;
-  cout << scientific
+  cout //<< scientific
        << vs << "\t"
        << 0.5*(F_lin_max + F_lin_min) << "\t"
-       << 0.5*(F_sqr_max + F_sqr_min) << endl;
+       << 0.5*(F_sqr_max + F_sqr_min) << "\t"
+       << Volume*K*sin(2*K*X0)*(1.0/(C2) - 1.0/(vs*vs))/(0.5*(F_sqr_max + F_sqr_min)) << endl;
   //Waves.PrintBoundary("data_over_surface.dat", Nodes, Disk.GetDotsX(), Disk.GetDotsY(), Disk.GetX(), Disk.GetY());
   return 0;
 }  
