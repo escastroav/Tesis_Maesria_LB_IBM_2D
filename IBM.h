@@ -20,6 +20,7 @@ class IBMDisk{
 private:
   int NDots;
   double radius;
+  double gamma;
   double A, B;
   double ds;
   double X_center; double Y_center;
@@ -41,7 +42,7 @@ private:
     for(int k=0; k<NDots; k++){
       isOut = !(dots_x[k] > 0 && dots_x[k] < Lx);
       if(isOut){
-	//cout << "Ball is out!" << endl;
+	cout << "Ball is out!" << endl;
 	return;}
       else
 	dots_x[k] += Vx*(dt*coeff);
@@ -65,13 +66,15 @@ private:
   };
   void Rotate(void)
   {
-    double rel_x, rel_y;
+    double rel_x, rel_y, rot_x, rot_y;
     for(int k=0; k<NDots; k++){
-      rel_x = dots_x[k] - X_center; rel_y = dots_y[k] - Y_center;
-      rel_x = rel_x * cos(phi) + rel_y * sin(phi);
-      rel_y = rel_y * cos(phi) - rel_x * sin(phi);
-      dots_x[k] = X_center + rel_x;
-      dots_y[k] = Y_center + rel_y;
+      rel_x = dots_x[k] - X_center;
+      rel_y = dots_y[k] - Y_center;
+      rot_x = rel_x * cos(phi) + rel_y * sin(phi);
+      rot_y = rel_y * cos(phi) - rel_x * sin(phi);
+      dots_x[k] = X_center + rot_x;
+      dots_y[k] = Y_center + rot_y;
+      //cout << k << " " << dots_x[k] << " " << dots_y[k] << endl;
     } 
   };
   void LocateDots_Circle(void)
@@ -81,9 +84,10 @@ private:
     for(k = 0; k < NDots; k++)
       {
 	dots_x[k] = X_center + radius * cos(dtheta * k);
-	//normals_x[k] = cos(dtheta * ((double)k + 0.5));
+	normals_x[k] = cos(dtheta * ((double)k + 0.5));
 	dots_y[k] = Y_center + radius * sin(dtheta * k);
-	//normals_y[k] = sin(dtheta * ((double)k + 0.5));
+	normals_y[k] = sin(dtheta * ((double)k + 0.5));
+	//cout << k << " " << dots_x[k] << " " << dots_y[k] << endl;
 	//cout << k << " " << normals_x[k] << " " << normals_y[k] << endl;
       }    
   }
@@ -93,8 +97,10 @@ private:
     ds = radius * dtheta;
     for(k = 0; k < NDots; k++)
       {
-	dots_x[k] = X_center + A * cos(dtheta * k);
-	dots_y[k] = Y_center + B * sin(dtheta * k);
+	dots_x[k] = X_center + A * cos(dtheta * k);// * cos(phi) - B * sin(dtheta * k) * sin(phi);
+	dots_y[k] = Y_center + B * sin(dtheta * k);// * cos(phi) + A * cos(dtheta * k) * sin(phi);
+	//cout << k << " " << dots_x[k] << " " << dots_y[k] << endl;
+
       }    
   }
   void LocateNormals(void)
@@ -119,7 +125,7 @@ private:
     //cout << k << " " << normals_x[NDots-1] << " " << normals_y[NDots - 1] << endl;
   }
 public:
-  IBMDisk(int nDots, double r, double A0, double B0, double b, double m, double vs, double X, double Y);
+  IBMDisk(int nDots, double r, double g, double Phi0, double A0, double B0, double b, double m, double vs, double X, double Y);
   ~IBMDisk(void);
   int GetNdots(){return NDots;}; double GetDs(){return ds;};
   double GetMass(){return mass;}; double GetBulk(){return bulk;};
@@ -134,23 +140,23 @@ public:
   double GetFx_J(){return fx_J;};
   double GetFy_J(){return fy_J;};
   double GetFy(){return fy;};
-  //Force
+  //Forces
+  double Fx(LatticeBoltzmann & LB);
   double Fx_p(LatticeBoltzmann & LB);
   double Fx_p2_v2(LatticeBoltzmann & LB);
   double Fx_J(LatticeBoltzmann & LB);
+  double Fy(LatticeBoltzmann & LB);
   double Fy_p(LatticeBoltzmann & LB);
   double Fy_p2_v2(LatticeBoltzmann & LB);
   double Fy_J(LatticeBoltzmann & LB);
+  double Fx_drag();
+  double Fy_drag();
   //Torque
-  // double Tz_p(LatticeBoltzmann & LB);
-  // double Tz_p2_v2(LatticeBoltzmann & LB);
-  // double Tz_J(LatticeBoltzmann & LB);
-  double Fx_ib(LatticeBoltzmann & LB,double B, double Ux,double ds,double Rad);
-  double Fy_ib(LatticeBoltzmann & LB,double B, double Uy,double ds,double Rad);
-  double SoundSpeed(double x, double y, double X, double Y, double R, double c0, double c);
-  void MeasureForce(LatticeBoltzmann & LB, int t, int tmax, double T, double & F_min, double & F_max, double & F_add);
+  double Tz_p(LatticeBoltzmann & LB);
+  double Tz_p2_v2(LatticeBoltzmann & LB);
+  double Tz_J(LatticeBoltzmann & LB);
   //Integrator
-  void UpdatePEFRL(LatticeBoltzmann & LB, double dt);
+  void UpdatePEFRL(double ARF_x, double ARF_y, double dt);//(LatticeBoltzmann & LB, double dt);
   //PrintDots
   void Print(const char * fileName, int t);
 };

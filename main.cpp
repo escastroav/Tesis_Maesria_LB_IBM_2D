@@ -83,32 +83,34 @@ void Neighbours(double* nb_x, double* nb_y, double x, double y)
 
 int main(int argc, char * argv[]){
   LatticeBoltzmann Waves;
-  double R = 10.0; // 1 dx => 3 um, 1 dt = 2 ns
-  double a0 = 30.0;
+  double R = 10.0; // 1 dx => 1 um, 1 dt = 1 ns
+  double Gamma = 10.0;
+  double a0 = 10.0;
   double b0 = 10.0;
-  double Phi = 0.0;
+  double Phi = 0.0;//M_PI * 0.1 * 3.5;
   double ds = 1.0;
-  int Nodes = (int)( 2 * M_PI * R / ds );
+  int Nodes = (int)( 2 * M_PI * a0 / ds );
   double Volume = M_PI * R * R; 
-  double vs = 0.241718363483469;//(1700/1500) *C; //polystyrene / water with C_o = 1/3
-  double density = 500 / Volume;//(1050/1000) / C2 ; // polystyrene / water with rho = B / C^2
+  double vs = 0.26;//(1699/1500) *C; //polystyrene / water with C_o = 1/3
+  double density = 4.0;//500 / Volume;//(1050/1000) / C2 ; // polystyrene / water with rho = B / C^2
   double B = density * vs * vs; // in the code is defined B_o = 1 for water
   double mass = density * Volume;
   int X0 = Lx/4;
   int Y0 = Ly/2;
-  double Po = 1.0/C2;
-  IBMDisk Disk(Nodes, R, a0, b0, B, mass, vs, X0, Y0);
-  int t,tmax=10*T;
+  double Po = 10/C2;
+  IBMDisk Disk(Nodes, R, Gamma, Phi, a0, b0, B, mass, vs, X0, Y0);
+  int t,tmax=200*T;
   double k = 2 * M_PI / Lambda;
-  double F_lin=0, F_lin_max=0, F_lin_min=0;
-  double F_sqr=0, F_sqr_max=0, F_sqr_min=0;
+  double T_z=0, T_z_max=0, T_z_min=0, ART_z = 0;
+  double F_x=0, F_x_max=0, F_x_min=0, F_x_add = 0, ARF_x = 0;
+  double F_y=0, F_y_max=0, F_y_min=0, F_y_add = 0, ARF_y = 0;
   double rho0=Po,Jx0=0,Jy0=0;
-  string outName = "Wav3D_st=";
+  string outName = "Speed3D_st=";
   string extension = ".dat";
   string frame = "";
   int iy = Ly/2; int ix = 0;
+  double dtMD = 1.0;
   cout.precision(8);
-  //cout << "P_o" << "\t" << "R" << "\t" << "k" << "\t" << "F_min" << "\t" << "F_max" << "\t" << "<F>" << endl;
   //Start
   Waves.Start(rho0,Jx0,Jy0,0,0,X0,Y0,R,vs);
   //Run
@@ -117,47 +119,45 @@ int main(int argc, char * argv[]){
     Waves.ImposeFields(t,X0,Y0,R,vs,Po);
     Waves.Advection();
     //X positions are relative to the wavelength!
-    //Disk.Fx(Waves); 
-    F_lin = Disk.Fx_p(Waves);
-    F_sqr = Disk.Fx_p2_v2(Waves) + Disk.Fx_J(Waves);
-    if(F_lin > F_lin_max && t > tmax - T - 1) F_lin_max = F_lin;
-    if(F_lin < F_lin_min && t > tmax - T - 1) F_lin_min = F_lin;
-    if(F_sqr > F_sqr_max && t > tmax - T - 1) F_sqr_max = F_sqr;
-    if(F_sqr < F_sqr_min && t > tmax - T - 1) F_sqr_min = F_sqr;
-    //if(FJ_amp > FJ_max && t >= tmax - T - 1) FJ_max = FJ_amp;
-    //if(FJ_amp < FJ_min && t >= tmax - T - 1) FJ_min = FJ_amp;
-    //if(t >= tmax - T - 1) F_add += F_tot / T;
-    //if(t >= tmax - T - 1) FJ_add += F_sqr / T;
-    //if(t >= tmax - T - 1) FL_add += F_lin / T;
-    //if(t >= 3*T) FJ_add += FJ_amp / T;
-    //Disk.MeasureForce(Waves, t, tmax, T, F_min, F_max, F_add);
-    //cout << scientific
-    //     << t/T << "\t"
-    //     << F_lin << "\t"
-    // << F_sqr << "\t"
-    //	 << 0.5*(F_lin_max + F_lin_min) << "\t"
-    //	 << 0.5*(F_sqr_max + F_sqr_min) << endl;
-    //Disk.UpdatePEFRL(Waves,1.0);
-    //frame = outName+to_string(t)+extension;
-    //if(t%2==0) Waves.Print(frame.c_str(),Nodes,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), R, Disk.GetDs(),vs);
+    F_x = Disk.Fx_p2_v2(Waves) + Disk.Fx_J(Waves);
+    if(t>11*T) F_x_add += F_x; 
+    F_y = Disk.Fy_p2_v2(Waves) + Disk.Fy_J(Waves);
+    if(t>11*T) F_y_add += F_y; 
+    //if(F_x > F_x_max) F_x_max = F_x;
+    //if(F_x < F_x_min) F_x_min = F_x;
+    //ARF_x = 0.5*(F_x_max + F_x_min);
+    //if(F_y > F_y_max && t > 10 * T) F_y_max = F_y;
+    //if(F_y < F_y_min && t > 10 * T) F_y_min = F_y;
+    //ARF_y = 0.5*(F_y_max + F_y_min);
+    //T_z = Disk.Tz_J(Waves) + Disk.Tz_p(Waves) + Disk.Tz_p2_v2(Waves);
+    //if(T_z > T_z_max && t > 10 * T) T_z_max = T_z;
+    //if(T_z < T_z_min && t > 10 * T) T_z_min = T_z;
+    //ART_z = 0.5*(T_z_max + T_z_min);
+    if(t>11*T && t%(int)T==0){
+    Disk.UpdatePEFRL(ARF_x,ARF_y,dtMD);//(Waves,dtMD);
+    ARF_x = F_x_add / T;//0.5*(F_x_max + F_x_min);
+    ARF_y = F_y_add / T;//0.5*(F_x_max + F_x_min);
+    cout << t/T << "\t"
+          << ARF_x << "\t"
+          << ARF_y << "\t"
+          << Disk.GetX() << "\t" 
+          << Disk.GetY() << endl;
+    F_x_max = 0;
+    F_y_max = 0;
+    F_x_add = 0;
+    F_y_add = 0;}
+    if(t%1000==0 && t>11*T) {
+      frame = outName+to_string((int)(t/1000))+extension;
+      Waves.Print(frame.c_str(),Nodes,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), R, Phi, a0, b0, Disk.GetDs(),vs);}
   }
   
   //Show
-  //for(ix=2;ix<Lx-2;ix++) cout << ix << " " << p_max[ix] << " " << p_min[ix] <<endl;
-  
-  //cout << scientific
-    //<< Po << "\t"
-       //<< R << "\t"
-       //<< k << "\t"
-       //<< F_min << "\t" 
-       //<< F_max << "\t"
-       //<< F_add << endl;// << "\t"
-       //<< FJ_add << endl;
-  cout //<< scientific
-       << vs << "\t"
-       << 0.5*(F_lin_max + F_lin_min) << "\t"
-       << 0.5*(F_sqr_max + F_sqr_min) << "\t"
-       << Volume*K*sin(2*K*X0)*(1.0/(C2) - 1.0/(vs*vs))/(0.5*(F_sqr_max + F_sqr_min)) << endl;
+  //Waves.Print("Interphase.dat",Nodes,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), R, Phi, a0, b0, Disk.GetDs(),vs);
+  //cout //<< scientific
+  //     << Phi << "\t"
+  //     << ARF_x << endl;//"\t"
+  //     << ARF_y << "\t"
+  //     << ART_z << endl;
   //Waves.PrintBoundary("data_over_surface.dat", Nodes, Disk.GetDotsX(), Disk.GetDotsY(), Disk.GetX(), Disk.GetY());
   return 0;
 }  

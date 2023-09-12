@@ -8,13 +8,13 @@ using namespace std;
 #include "ComputeEpsilon.h"
 //------------LB constants--------------------
 const double Lambda = 500; 
-const int Lx= 251;
-const int Ly= 64;
+const int Lx= 250;
+const int Ly= 64; 
 
 const int Q=5;
 const double W0=1.0/3;
 
-const double C=0.25;// C<0.707 cells
+const double C=0.25;
 const double C2=C*C;
 const double AUX0=1-3*C2*(1-W0);
 const double T = Lambda / C;
@@ -52,6 +52,6 @@ public:
   void Advection(void);
   void Start(double rho0,double Jx0,double Jy0,double Fx0,double Fy0,double X, double Y, double Radius, double c);
   void PrintBoundary(const char * NameFile, int Ndots, double * dotsx, double * dotsy, double X, double Y);
-  void Print(const char * NombreArchivo,int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius,double ds,double v);
+  void Print(const char * NombreArchivo,int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius,double phi, double A0, double B0, double ds,double v);
 };  
 

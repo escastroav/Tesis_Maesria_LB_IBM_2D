@@ -35,8 +35,8 @@ double LatticeBoltzmann::Speed(int ix, int iy, int X, int Y, double R, double v)
 double LatticeBoltzmann::Speed_Ellipse(int ix, int iy, int X, int Y, double Phi, double A, double B, double v)
 {
   int ixp = ix - X; int iyp = iy - Y;
-  double xr = ixp*cos(Phi)+iyp*sin(Phi);
-  double yr = iyp*cos(Phi)-ixp*sin(Phi);
+  double xr = ixp*cos(Phi)-iyp*sin(Phi);
+  double yr = iyp*cos(Phi)+ixp*sin(Phi);
   double xx = B*xr*xr/A;
   double yy = A*yr*yr/B;
   double w = 1.0/3.0;
@@ -149,8 +149,8 @@ void LatticeBoltzmann::Collision(int Ndots, double * dotsx, double * dotsy, doub
       rho0=rho(ix,iy,false);
       Jx0= Jx(ix,iy,false);
       Jy0=Jy(ix,iy,false);
-      //c0=Speed(ix,iy,X,Y,Radius,c);
-      c0=Speed_Ellipse(ix, iy, X, Y, phi, A0, B0, c);
+      c0=Speed(ix,iy,X,Y,Radius,c);
+      //c0=Speed_Ellipse(ix, iy, X, Y, phi, A0, B0, c);
       //Rxy2 = (ix - X)*(ix - X) + (iy - Y)*(iy - Y);
         //if((ix >= floor(X-Radius-2) && ix <= ceil(X+Radius+2))
 	//   &&
@@ -242,7 +242,7 @@ void LatticeBoltzmann::PrintBoundary(const char * NameFile, int Ndots, double * 
   }
   MyFile.close();
 }
-void LatticeBoltzmann::Print(const char * NameFile,int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius, double ds,double v){
+void LatticeBoltzmann::Print(const char * NameFile,int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius,double phi, double A0, double B0, double ds,double v){
   ofstream MyFile(NameFile); double rho0, Fx0, Fy0, Jx0, Jy0, c2; int ix,iy;
   MyFile.precision(8);
   for(iy=0;iy<Ly;iy++){
@@ -251,9 +251,9 @@ void LatticeBoltzmann::Print(const char * NameFile,int Ndots, double * dotsx, do
       //Jx0=Jx(ix,iy,true); Jy0=Jy(ix,iy,true);
       //Fx0=Fbpx(Ndots, ix, iy, dotsx, dotsy, bulk, Ux, ds);	 
       //Fy0=Fbpy(Ndots, ix, iy, dotsx, dotsy, bulk, Uy, ds);
-      c2 = Speed(ix,iy,X,Y,Radius,v);
-      MyFile<<scientific<<c2;
-      if(ix<Lx-1)MyFile<<" "; 
+      c2 = Speed_Ellipse(ix, iy, X, Y, phi, A0, B0, v);
+      MyFile<<scientific<<c2; 
+      if(ix<Lx-1)MyFile<<" ";
     }
     MyFile<<endl;
   }
