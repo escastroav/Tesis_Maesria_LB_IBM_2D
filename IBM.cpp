@@ -8,10 +8,10 @@ IBMDisk::IBMDisk(int nDots, double r, double g, double phi0, double A0, double B
   fx = 0; fy = 0; Vx = 0; Vy = 0; mass = m; bulk = b;
   density = mass / (M_PI*radius*radius);
   vsound = vs;
-  //LocateDots_Circle();
-  LocateDots_Capsule();
+  LocateDots_Circle();
+  //LocateDots_Capsule();
   //LocateDots_Ellipse();
-  Rotate();
+  //Rotate();
   LocateNormals();
 }
 IBMDisk::~IBMDisk(void)

@@ -25,14 +25,17 @@ const double tau=0.5;
 const double Utau=1.0/tau;
 const double UmUtau=1-Utau;
 
+class IBMDisk;
 //--------------------- class LatticeBoltzmann ----------------------------------
 class LatticeBoltzmann{
 private:
   double w[Q];      //Weights 
   int Vx[Q],Vy[Q];  //Velocity vectors
   double *f, *fnew; //Distribution Functions
+  IBMDisk* IBM1;
+  IBMDisk* IBM2;
 public:
-  LatticeBoltzmann(void);
+  LatticeBoltzmann(IBMDisk* IB1, IBMDisk* IB2);
   ~LatticeBoltzmann(void);
   int n(int ix,int iy,int i){return (ix*Ly+iy)*Q+i;};
   double rho(int ix,int iy,bool UseNew);
@@ -44,15 +47,15 @@ public:
   //Interpolation
   double Interpolate(char field, double x, double y);
   //Eq distribution
-  double Speed(int ix, int iy, int X, int Y, double R, double v);
-  double Speed_Capsule(int ix, int iy, int X, int Y, double R, double v,double Phi);
-  double Speed_Ellipse(int ix, int iy, int X, int Y, double Phi, double A, double B, double v);
+  double Speed(int ix, int iy);//, int X, int Y, double R, double v);
+  double Speed_Capsule(int ix, int iy);//, int X, int Y, double R, double v,double Phi);
+  double Speed_Ellipse(int ix, int iy);//, int X, int Y, double Phi, double A, double B, double v);
   double feq(double rho0,double Jx0,double Jy0,int i,double c);
-  void Collision(int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux,double Uy, double phi, double Radius, double A0, double B0, double Ds, double c, int t);
-  void ImposeFields(int t,double X, double Y, double Radius, double c, double Po);
+  void Collision();//(int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux,double Uy, double phi, double Radius, double A0, double B0, double Ds, double c, int t);
+  void ImposeFields(int t, double Po);//,double X, double Y, double Radius, double c, double Po);
   void Advection(void);
-  void Start(double rho0,double Jx0,double Jy0,double Fx0,double Fy0,double X, double Y, double Radius, double c);
+  void Start(double rho0,double Jx0,double Jy0,double Fx0,double Fy0);//,double X, double Y, double Radius, double c);
   void PrintBoundary(const char * NameFile, int Ndots, double * dotsx, double * dotsy, double X, double Y);
-  void Print(const char * NombreArchivo,int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius,double phi, double A0, double B0, double ds,double v);
+  void Print(const char * NombreArchivo);//,int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius,double phi, double A0, double B0, double ds,double v);
 };  
 

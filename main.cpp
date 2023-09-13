@@ -82,48 +82,60 @@ void Neighbours(double* nb_x, double* nb_y, double x, double y)
 //--------------- Global Functions ------------
 
 int main(int argc, char * argv[]){
-  LatticeBoltzmann Waves;
   double R = 10.0; // 1 dx => 1 um, 1 dt = 1 ns
   double Gamma = 1.0;
   double a0 = 10.0;
   double b0 = 10.0;
-  double Phi = M_PI * 0.0625 * 6.0;
-  double D = -1.0;
+  double Phi = M_PI * 0.0625 * 4.0;
+  double D = 20.0;
   double ds = 1.0;
-  int Nodes = 80;//(int)( 2 * M_PI * a0 / ds );
+  int Nodes = (int)( 2 * M_PI * R / ds );
   double Volume = M_PI * R * R; 
   double vs = 0.25;//(1699/1500) *C; //polystyrene / water with C_o = 1/3
   double density = 4.0;//500 / Volume;//(1050/1000) / C2 ; // polystyrene / water with rho = B / C^2
   double B = density * vs * vs; // in the code is defined B_o = 1 for water
   double mass = density * Volume;
-  int X0 = Lx/2 - D*cos(Phi);
-  int Y0 = Ly/2 - D*sin(Phi);
-  double Po = 1.0/C2;
-  IBMDisk Disk(Nodes, R, Gamma, Phi, a0, b0, B, mass, vs, X0, Y0);
-  int t,tmax=20*T;
+  int X1 = Lx/2 - D*cos(Phi);
+  int X2 = Lx/2 + D*cos(Phi);
+  int Y1 = Ly/2 - D*sin(Phi);
+  int Y2 = Ly/2 + D*sin(Phi);
+  double Po = 10.0/C2;
+  IBMDisk Disk1(Nodes, R, Gamma, Phi, a0, b0, B, mass, vs, X1, Y1);
+  IBMDisk Disk2(Nodes, R, Gamma, Phi, a0, b0, B, mass, vs, X2, Y2);
+  LatticeBoltzmann Waves(&Disk1, &Disk2);
+  int t,tmax=100 * T;
   double k = 2 * M_PI / Lambda;
-  double T_z=0, T_z_max=0, T_z_min=0, T_z_add=0, ART_z = 0;
-  double F_x=0, F_x_max=0, F_x_min=0, F_x_add=0, ARF_x = 0;
-  double F_y=0, F_y_max=0, F_y_min=0, F_y_add=0, ARF_y = 0;
+  double T_z=0, T_z_add=0, ART_z = 0;
+  double F_x_1=0, F_x_1_add=0, ARF1_x = 0;
+  double F_y_1=0, F_y_1_add=0, ARF1_y = 0;
+  double F_x_2=0, F_x_2_add=0, ARF2_x = 0;
+  double F_y_2=0, F_y_2_add=0, ARF2_y = 0;
   double rho0=Po,Jx0=0,Jy0=0;
-  string outName = "speed3D_st=";
+  string outName = "speedDisk1Disk2_st=";
   string extension = ".dat";
   string frame = "";
   int iy = Ly/2; int ix = 0;
   double dtMD = 1.0;
   cout.precision(8);
   //Start
-  Waves.Start(rho0,Jx0,Jy0,0,0,X0,Y0,R,vs);
+  Waves.Start(rho0,Jx0,Jy0,0,0);//,X0,Y0,R,vs);
   //Run
   for(t=0;t<tmax;t++){
-    Waves.Collision(Nodes,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), Phi, R, a0, b0, Disk.GetDs(), vs, t);
-    Waves.ImposeFields(t,X0,Y0,R,vs,Po);
+    Waves.Collision();//(Nodes,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), Phi, R, a0, b0, Disk.GetDs(), vs, t);
+    Waves.ImposeFields(t,Po);//,X0,Y0,R,vs,Po);
     Waves.Advection();
     //X positions are relative to the wavelength!
     //F_x = Disk.Fx_p2_v2(Waves) + Disk.Fx_J(Waves);
     if(t > 10*T){
-    F_x = Disk.Fx(Waves);
-    F_x_add+=F_x;
+    F_x_1 = Disk1.Fx(Waves);
+    F_x_1_add+=F_x_1;
+    F_y_1 = Disk1.Fy(Waves);
+    F_y_1_add+=F_y_1;
+
+    F_x_2 = Disk2.Fx(Waves);
+    F_x_2_add+=F_x_2;
+    F_y_2 = Disk2.Fy(Waves);
+    F_y_2_add+=F_y_2;
     //if(F_x > F_x_max) F_x_max = F_x;
     //if(F_x < F_x_min) F_x_min = F_x;
     //ARF_x = 0.5*(F_x_max + F_x_min);
@@ -133,42 +145,53 @@ int main(int argc, char * argv[]){
     //if(F_y < F_y_min) F_y_min = F_y;
     //ARF_y = 0.5*(F_y_max + F_y_min);
     //T_z = Disk.Tz_J(Waves) + Disk.Tz_p2_v2(Waves);
-    T_z = Disk.Tz(Waves, D, Phi);
-    T_z_add+=T_z;
+    //T_z = Disk1.Tz(Waves, D, Phi);
+    //T_z_add+=T_z;
     //if(T_z > T_z_max) T_z_max = T_z;
     //if(T_z < T_z_min) T_z_min = T_z;
     //ART_z = 0.5*(T_z_max + T_z_min);
     //cout << t/T << " " << F_x << " " << F_x_add / T << " " << ARF_x << endl;
     //cout << t/T << " " << T_z << " " << T_z_add / T << " " << ART_z << endl;
     if(t % (int)T == 0){
-    //Disk.UpdatePEFRL(ARF_x,ARF_y,dtMD);//(Waves,dtMD);
+    Disk1.UpdatePEFRL(ARF1_x,ARF1_y,dtMD);
+    Disk2.UpdatePEFRL(ARF2_x,ARF2_y,dtMD);
     //ARF_x = 0.5*(F_x_max + F_x_min);
-    ARF_x = F_x_add / T; 
-    ART_z = T_z_add / T; 
-     //cout << t/T << "\t"
-     //     << ARF_x << "\t"
-     //     << ART_z << endl;
-    //     << ARF_y << "\t"
-    //     << Disk.GetX() << endl;
-    F_x_add = 0;
-    T_z_add = 0;
+    ARF1_x = F_x_1_add / T; 
+    ARF2_x = F_x_2_add / T; 
+    ARF1_y = F_y_1_add / T; 
+    ARF2_y = F_y_2_add / T; 
+    //ART1_z = T_z_add / T; 
+     cout << t/T << "\t"
+          << ARF1_x << "\t"
+          << ARF1_y << "\t"
+          << ARF2_x << "\t"
+          << ARF2_y << "\t"
+          << Disk1.GetX() << "\t"
+          << Disk1.GetY() << "\t"
+          << Disk2.GetX() << "\t"
+          << Disk2.GetY() << endl;
+    F_x_1_add = 0;
+    F_x_2_add = 0;
+    F_y_1_add = 0;
+    F_y_2_add = 0;
+    //T_z_add = 0;
     }}
      //ARF_x = 0.5*(F_x_max + F_x_min);
      //ARF_y = 0.5*(F_y_max + F_y_min);
     //Disk.UpdatePEFRL(ARF_x,ARF_y,dtMD);}//(Waves,dtMD);
     //frame = outName+to_string(t)+extension;
     //if(t%2==0 && t>10*T) Waves.Print(frame.c_str(),Nodes,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), R, Phi, a0, b0, Disk.GetDs(),vs);
-   //Waves.Print(frame.c_str(),Nodes,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), R, Phi, a0, b0, Disk.GetDs(),vs);
+    //Waves.Print(frame.c_str());//,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), R, Phi, a0, b0, Disk.GetDs(),vs);
   }
   
   //Show
- 
+  /**
   cout << "D" << "\t"
   	<< "F_x" << "\t\t"
       << "T_z" << endl;
   cout << D << "\t"
   	<< ARF_x << "\t"
-      << ART_z << endl;
+      << ART_z << endl;**/
   //Waves.PrintBoundary("data_over_surface.dat", Nodes, Disk.GetDotsX(), Disk.GetDotsY(), Disk.GetX(), Disk.GetY());
   return 0;
 }  

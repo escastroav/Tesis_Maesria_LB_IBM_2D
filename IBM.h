@@ -21,6 +21,7 @@ private:
   int NDots;
   double radius;
   double gamma;
+  double sound_speed;
   double A, B;
   double ds;
   double X_center; double Y_center;
@@ -176,17 +177,22 @@ public:
   ~IBMDisk(void);
   int GetNdots(){return NDots;}; double GetDs(){return ds;};
   double GetMass(){return mass;}; double GetBulk(){return bulk;};
+  double GetSoundSpeed(){return vsound;};
+  double GetRadius(){return radius;};
   double GetDensity(){return density;};
   double* GetDotsX(){return dots_x;};
   double* GetDotsY(){return dots_y;};
   double GetX(){return X_center;};
   double GetY(){return Y_center;};
+  double GetPhi(){return phi;};
   double GetVx(){return Vx;};
   double GetVy(){return Vy;};
   double GetFx(){return fx;};
   double GetFx_J(){return fx_J;};
   double GetFy_J(){return fy_J;};
   double GetFy(){return fy;};
+  double GetA(){return A;};
+  double GetB(){return B;};
   //Forces
   double Fx(LatticeBoltzmann & LB);
   double Fx_p(LatticeBoltzmann & LB);

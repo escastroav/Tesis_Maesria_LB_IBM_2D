@@ -1,6 +1,9 @@
 #include "Waves_D2Q5.h"
-
-LatticeBoltzmann::LatticeBoltzmann(void){
+#include "IBM.h"
+LatticeBoltzmann::LatticeBoltzmann(IBMDisk* IB1, IBMDisk* IB2){
+  //Set Immersed disk
+  IBM1 = IB1;
+  IBM2 = IB2;
   //Set the weights
   w[0]=W0; w[1]=w[2]=w[3]=w[4]=(1.0-W0)/4;
   //Set the velocity vectors
@@ -13,10 +16,6 @@ LatticeBoltzmann::LatticeBoltzmann(void){
 LatticeBoltzmann::~LatticeBoltzmann(void){
     delete[] f;  delete[] fnew;
 }
-/*void LatticeBoltzmann::SetDisk(IBMDisk & d)
-{
-  *disk = d;
-  }*/
 double LatticeBoltzmann::rho(int ix,int iy,bool UseNew){
   double sum; int i,n0;
   for(sum=0,i=0;i<Q;i++){
@@ -25,15 +24,28 @@ double LatticeBoltzmann::rho(int ix,int iy,bool UseNew){
   }
   return sum;
 }
-double LatticeBoltzmann::Speed(int ix, int iy, int X, int Y, double R, double v)
+double LatticeBoltzmann::Speed(int ix, int iy)//, int X, int Y, double R, double v)
 {
-  int ixp = ix - X; int iyp = iy - Y;
-  double r = ixp*ixp + iyp*iyp;
-  double w = 1.0/3.0;
-  return C - (C-v)*0.5*(1-tanh(w*(r-R*R)));
+  int X1 = (int)(*IBM1).GetX(), Y1 = (int)(*IBM1).GetY();
+  int X2 = (int)(*IBM2).GetX(), Y2 = (int)(*IBM2).GetY();
+  double R1 = (*IBM1).GetRadius(), v1 = (*IBM1).GetSoundSpeed(); 
+  double R2 = (*IBM2).GetRadius();// v2 = (*IBM2).GetSoundSpeed(); 
+
+  int ixp1 = ix - X1; int iyp1 = iy - Y1;
+  double r1 = ixp1*ixp1 + iyp1*iyp1;
+  double w1 = 3.0;
+  double circle1 = 1.0 - tanh((r1-R1*R1)*w1);
+  int ixp2 = ix - X2; int iyp2 = iy - Y2;
+  double r2 = ixp2*ixp2 + iyp2*iyp2;
+  double w2 = 3.0;
+  double circle2 = 1.0 - tanh((r2-R2*R2)*w2);
+  double circles = circle1 + circle2 - 0.5*circle1*circle2;
+  return C - (C-v1)*0.5*circles;
 }
-double LatticeBoltzmann::Speed_Capsule(int ix, int iy, int X, int Y, double R, double v,double Phi)
+double LatticeBoltzmann::Speed_Capsule(int ix, int iy)//, int X, int Y, double R, double v,double Phi)
 {
+  int X = (int)(*IBM1).GetX(), Y = (int)(*IBM1).GetY();
+  double R = (*IBM1).GetRadius(), v = (*IBM1).GetSoundSpeed(), Phi = (*IBM1).GetPhi(); 
   int ixp = ix - X; int iyp = iy - Y;
   double xr = ixp*cos(Phi)+iyp*sin(Phi);
   double yr = iyp*cos(Phi)-ixp*sin(Phi);
@@ -50,8 +62,11 @@ double LatticeBoltzmann::Speed_Capsule(int ix, int iy, int X, int Y, double R, d
   double pill = circles + slab - 0.5*circles*slab;
   return C - (C-v)*0.5*pill;
 }
-double LatticeBoltzmann::Speed_Ellipse(int ix, int iy, int X, int Y, double Phi, double A, double B, double v)
+double LatticeBoltzmann::Speed_Ellipse(int ix, int iy)//, int X, int Y, double Phi, double A, double B, double v)
 {
+  int X = (int)(*IBM1).GetX(), Y = (int)(*IBM1).GetY();
+  double R = (*IBM1).GetRadius(), v = (*IBM1).GetSoundSpeed(), Phi = (*IBM1).GetPhi(); 
+  double A = (*IBM1).GetA(), B = (*IBM1).GetB();
   int ixp = ix - X; int iyp = iy - Y;
   double xr = ixp*cos(Phi)-iyp*sin(Phi);
   double yr = iyp*cos(Phi)+ixp*sin(Phi);
@@ -147,19 +162,19 @@ double  LatticeBoltzmann::feq(double rho0,double Jx0,double Jy0,int i,double c){
   else
     return rho0*(1-3*c*c*(1-W0));
 }  
-void LatticeBoltzmann::Start(double rho0,double Jx0,double Jy0, double Fx0, double Fy0, double X, double Y, double R, double c){
+void LatticeBoltzmann::Start(double rho0,double Jx0,double Jy0, double Fx0, double Fy0){//, double X, double Y, double R, double c){
   int ix,iy,i,n0; double c0;
   for(ix=0;ix<Lx;ix++) //for each cell
     for(iy=0;iy<Ly;iy++)
       for(i=0;i<Q;i++){ //on each direction
 	n0=n(ix,iy,i);
-	c0 = Speed(ix, iy, X, Y, R, c);
+	c0 = Speed(ix, iy);//, X, Y, R, c);
 	rho0 *= sin(K*ix);
 	Jx0 *= -C*sin(K*ix);
 	f[n0]=feq(rho0,Jx0+0.5*Fx0,Jy0+0.5*Fy0,i,c0);
       }
 }
-void LatticeBoltzmann::Collision(int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double phi, double Radius, double A0, double B0, double Ds, double c, int t){
+void LatticeBoltzmann::Collision(){//(int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double phi, double Radius, double A0, double B0, double Ds, double c, int t){
   int ix,iy,i,n0; double rho0,Jx0,Jy0,Fx0,Fy0,c0,Rxy2;
   for(ix=0;ix<Lx;ix++) //for each cell
     for(iy=0;iy<Ly;iy++){
@@ -168,7 +183,7 @@ void LatticeBoltzmann::Collision(int Ndots, double * dotsx, double * dotsy, doub
       Jx0= Jx(ix,iy,false);
       Jy0=Jy(ix,iy,false);
       //c0=Speed(ix,iy,X,Y,Radius,c);
-      c0=Speed_Capsule(ix,iy,X,Y,Radius,c,phi);
+      c0=Speed(ix,iy);//y,X,Y,Radius,c,phi);
       //c0=Speed_Ellipse(ix, iy, X, Y, phi, A0, B0, c);
       //Rxy2 = (ix - X)*(ix - X) + (iy - Y)*(iy - Y);
         //if((ix >= floor(X-Radius-2) && ix <= ceil(X+Radius+2))
@@ -202,7 +217,8 @@ void LatticeBoltzmann::Collision(int Ndots, double * dotsx, double * dotsy, doub
         }}
     }  
 }
-void LatticeBoltzmann::ImposeFields(int t,double X, double Y, double Radius, double c, double Po){
+void LatticeBoltzmann::ImposeFields(int t,double Po)//,double X, double Y, double Radius, double c, double Po){
+{
   int i,ix,iy,n0;
   double rho0,Jx0,Jy0,c0; 
   //an oscillating source in the middle
@@ -210,7 +226,7 @@ void LatticeBoltzmann::ImposeFields(int t,double X, double Y, double Radius, dou
   for(iy=0;iy<Ly;iy++){
   ix=1;	  
   rho0= Po*sin(Omega*t); 
-  c0 = Speed(ix,iy,X,Y,Radius,c);
+  c0 = C;//Speed(ix,iy);//,X,Y,Radius,c);
   Jx0= Jx(ix,iy,false); Jy0=Jy(ix,iy,false);
   for(i=0;i<Q;i++){
     n0=n(ix,iy,i);
@@ -218,7 +234,7 @@ void LatticeBoltzmann::ImposeFields(int t,double X, double Y, double Radius, dou
     }
   ix=Lx-2;	  
   rho0= -Po*sin(Omega*t); 
-  c0 = Speed(ix,iy,X,Y,Radius,c);
+  c0 = C;//Speed(ix,iy);//,X,Y,Radius,c);
   Jx0= Jx(ix,iy,false); Jy0=Jy(ix,iy,false);
   for(i=0;i<Q;i++){
     n0=n(ix,iy,i);
@@ -261,7 +277,7 @@ void LatticeBoltzmann::PrintBoundary(const char * NameFile, int Ndots, double * 
   }
   MyFile.close();
 }
-void LatticeBoltzmann::Print(const char * NameFile,int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius,double phi, double A0, double B0, double ds,double v){
+void LatticeBoltzmann::Print(const char * NameFile){//,int Ndots, double * dotsx, double * dotsy, double bulk, double X, double Y, double Ux, double Uy, double Radius,double phi, double A0, double B0, double ds,double v){
   ofstream MyFile(NameFile); double rho0, Fx0, Fy0, Jx0, Jy0, c2; int ix,iy;
   MyFile.precision(8);
   for(iy=0;iy<Ly;iy++){
@@ -270,7 +286,7 @@ void LatticeBoltzmann::Print(const char * NameFile,int Ndots, double * dotsx, do
       //Jx0=Jx(ix,iy,true); Jy0=Jy(ix,iy,true);
       //Fx0=Fbpx(Ndots, ix, iy, dotsx, dotsy, bulk, Ux, ds);	 
       //Fy0=Fbpy(Ndots, ix, iy, dotsx, dotsy, bulk, Uy, ds);
-      c2 = Speed_Capsule(ix, iy, X, Y, Radius, v,phi);
+      c2 = Speed(ix, iy);//, X, Y, Radius, v,phi);
       MyFile<<scientific<<c2; 
       if(ix<Lx-1)MyFile<<" ";
     }
