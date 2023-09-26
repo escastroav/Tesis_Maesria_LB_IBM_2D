@@ -408,33 +408,62 @@ double IBMDisk::Fy_drag()
 {
   return -1.0 * gamma * radius * Vy;
 }
-void IBMDisk::UpdatePEFRL(double ARF_x, double ARF_y, double dt)//(LatticeBoltzmann & LB, double dt)
+double IBMDisk::Fx_spring(double diff, double DX, double DY)
 {
-  Update_X(dt,epsilon); Update_Y(dt, epsilon);
+  return 120.0 * diff * (DX / sqrt(DX*DX + DY*DY));
+}
+double IBMDisk::Fy_spring(double diff, double DX, double DY)
+{
+  return 120.0 * diff * (DY / sqrt(DX*DX + DY*DY));
+}
+double IBMDisk::Fx_magnetic(double t, double OmegaB, double DX, double DY)
+{
+  return -200 * (DX*sin(OmegaB*t) - DY*cos(OmegaB*t)) * (DY / (DX*DX + DY*DY));
+}
+double IBMDisk::Fy_magnetic(double t, double OmegaB, double DX, double DY)
+{
+  return 200 * (DX*sin(OmegaB*t) - DY*cos(OmegaB*t)) * (DX / (DX*DX + DY*DY));
+}
+void IBMDisk::UpdatePEFRL(double t, double omega, double ARF_x, double ARF_y, double dt, IBMDisk & Disk, double sign, double D)//(LatticeBoltzmann & LB, double dt)
+{
+  double X2 = Disk.GetX(), Y2 = Disk.GetY();
+  double DX = X2 - X_center, DY = Y2 - Y_center;
+  double dist2 = DX*DX + DY*DY;
+  double mind_x= D*DX/sqrt(dist2), mind_y = D*DY/sqrt(dist2);
 
-  fx = ARF_x + Fx_drag();//fx = Fx_p(LB)+Fx_p2_v2(LB)+Fx_J(LB);
-  fy = ARF_y + Fy_drag();//fy = Fy_p(LB)+Fy_p2_v2(LB)+Fy_J(LB);
+  Update_X(dt,epsilon); Update_Y(dt, epsilon);
+  
+  ///CorrectX((DX-mind_x)*epsilon); CorrectY((DY-mind_y)*epsilon);
+  fx = ARF_x + Fx_drag() + sign*Fx_magnetic(t, omega, DX, DY);// + Fx_spring(sqrt(DX*DX + DY*DY) - D, DX, DY);
+  fy = ARF_y + Fy_drag() + sign*Fy_magnetic(t, omega, DX, DY);// + Fy_spring(sqrt(DX*DX + DY*DY) - D, DX, DY);
   Update_Vx(dt,coeff1); Update_Vy(dt, coeff1);
 
   Update_X(dt,chi); Update_Y(dt, chi);
 
-  fx = ARF_x + Fx_drag();//fx = Fx_p(LB)+Fx_p2_v2(LB)+Fx_J(LB);
-  fy = ARF_y + Fy_drag();//fy = Fy_p(LB)+Fy_p2_v2(LB)+Fy_J(LB);
+  //CorrectX((DX-mind_x)*chi); CorrectY((DY-mind_y)*chi);
+  fx = ARF_x + Fx_drag() +  sign*Fx_magnetic(t, omega, DX, DY);// + Fx_spring(sqrt(DX*DX + DY*DY) - D, DX, DY);
+  fy = ARF_y + Fy_drag() +  sign*Fy_magnetic(t, omega, DX, DY);// + Fy_spring(sqrt(DX*DX + DY*DY) - D, DX, DY);
   Update_Vx(dt,lambda); Update_Vy(dt, lambda);
 
   Update_X(dt,coeff2); Update_Y(dt, coeff2);
 
-  fx = ARF_x + Fx_drag();//fx = Fx_p(LB)+Fx_p2_v2(LB)+Fx_J(LB);
-  fy = ARF_y + Fy_drag();//fy = Fy_p(LB)+Fy_p2_v2(LB)+Fy_J(LB);
+  //CorrectX((DX-mind_x)*coeff2); CorrectY((DY-mind_y)*coeff2);
+  fx = ARF_x + Fx_drag() +  sign*Fx_magnetic(t, omega, DX, DY);// + Fx_spring(sqrt(DX*DX + DY*DY) - D, DX, DY);
+  fy = ARF_y + Fy_drag() +  sign*Fy_magnetic(t, omega, DX, DY);// + Fy_spring(sqrt(DX*DX + DY*DY) - D, DX, DY);
   Update_Vx(dt,lambda); Update_Vy(dt, lambda);
 
   Update_X(dt,chi); Update_Y(dt, chi);
 
-  fx = ARF_x + Fx_drag();//fx = Fx_p(LB)+Fx_p2_v2(LB)+Fx_J(LB);
-  fy = ARF_y + Fy_drag();//fy = Fy_p(LB)+Fy_p2_v2(LB)+Fy_J(LB);
+  //CorrectX((DX-mind_x)*chi); CorrectY((DY-mind_y)*chi);
+  fx = ARF_x + Fx_drag() +  sign*Fx_magnetic(t, omega, DX, DY);// + Fx_spring(sqrt(DX*DX + DY*DY) - D, DX, DY);
+  fy = ARF_y + Fy_drag() +  sign*Fy_magnetic(t, omega, DX, DY);// + Fy_spring(sqrt(DX*DX + DY*DY) - D, DX, DY);
   Update_Vx(dt,coeff1); Update_Vy(dt, coeff1);
 
   Update_X(dt,epsilon); Update_Y(dt, epsilon);
+
+  //CorrectX((DX-mind_x)*epsilon); CorrectY((DY-mind_y)*epsilon);
+  CorrectX((DX-mind_x)); CorrectY((DY-mind_y));
+
 }
 void IBMDisk::Print(const char * fileName, int t)
 {

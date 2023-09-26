@@ -65,6 +65,34 @@ private:
     if(!isOut)
       Y_center += Vy*(dt*coeff);
   };
+  void CorrectX(double dx)
+  {
+    bool isOut = false;
+    for(int k=0; k<NDots; k++){
+      isOut = !(dots_x[k] > 0 && dots_x[k] < Lx);
+      if(isOut){
+	cout << "Ball is out!" << endl;
+	return;}
+      else
+	dots_x[k] += dx;
+    }
+    if(!isOut)
+      X_center += dx;
+  };
+  void CorrectY(double dy)
+  {
+    bool isOut = false;
+    for(int k=0; k<NDots; k++){
+      isOut = !(dots_y[k] > 0 && dots_y[k] < Ly);
+      if(isOut){
+        //cout << "Ball is out!" << endl;
+	return;}
+      else
+	dots_y[k] += dy;
+    }
+    if(!isOut)
+      Y_center += dy;
+  };
   void Rotate(void)
   {
     double rel_x, rel_y, rot_x, rot_y;
@@ -204,13 +232,17 @@ public:
   double Fy_J(LatticeBoltzmann & LB);
   double Fx_drag();
   double Fy_drag();
+  double Fx_spring(double diff, double DX, double DY);
+  double Fy_spring(double diff, double DX, double DY);
+  double Fx_magnetic(double t, double OmegaB, double DX, double DY);
+  double Fy_magnetic(double t, double OmegaB, double DX, double DY);
   //Torque
   double Tz(LatticeBoltzmann & LB,double d, double Phi0);
   double Tz_p(LatticeBoltzmann & LB);
   double Tz_p2_v2(LatticeBoltzmann & LB);
   double Tz_J(LatticeBoltzmann & LB);
   //Integrator
-  void UpdatePEFRL(double ARF_x, double ARF_y, double dt);//(LatticeBoltzmann & LB, double dt);
+  void UpdatePEFRL(double t, double omega, double ARF_x, double ARF_y, double dt,IBMDisk & Disk,double sign,double D);//(LatticeBoltzmann & LB, double dt);
   //PrintDots
   void Print(const char * fileName, int t);
 };

@@ -82,28 +82,34 @@ void Neighbours(double* nb_x, double* nb_y, double x, double y)
 //--------------- Global Functions ------------
 
 int main(int argc, char * argv[]){
-  double R = 10.0; // 1 dx => 1 um, 1 dt = 1 ns
-  double Gamma = 1.0;
+  double R1 = 05.0;
+  double R2 = 08.0;
+  double Gamma1 = 10.0;
+  double Gamma2 = 10.0;
   double a0 = 10.0;
   double b0 = 10.0;
-  double Phi = M_PI * 0.0625 * 4.0;
-  double D = 20.0;
+  double Phi = M_PI * 0.0625 * 0.0;
+  double D = 10.0;
   double ds = 1.0;
-  int Nodes = (int)( 2 * M_PI * R / ds );
-  double Volume = M_PI * R * R; 
-  double vs = 0.25;//(1699/1500) *C; //polystyrene / water with C_o = 1/3
-  double density = 4.0;//500 / Volume;//(1050/1000) / C2 ; // polystyrene / water with rho = B / C^2
-  double B = density * vs * vs; // in the code is defined B_o = 1 for water
-  double mass = density * Volume;
+  int Nodes1 = (int)( 2 * M_PI * R1 / ds );
+  int Nodes2 = (int)( 2 * M_PI * R2 / ds );
+  double Volume1 = M_PI * R1 * R1; 
+  double Volume2 = M_PI * R2 * R2; 
+  double vs = 0.25;
+  double density1 = 4.0;
+  double density2 = 4.0;
+  double B = density1 * vs * vs;
+  double mass1 = density1 * Volume1;
+  double mass2 = density2 * Volume2;
   int X1 = Lx/2 - D*cos(Phi);
   int X2 = Lx/2 + D*cos(Phi);
   int Y1 = Ly/2 - D*sin(Phi);
   int Y2 = Ly/2 + D*sin(Phi);
   double Po = 10.0/C2;
-  IBMDisk Disk1(Nodes, R, Gamma, Phi, a0, b0, B, mass, vs, X1, Y1);
-  IBMDisk Disk2(Nodes, R, Gamma, Phi, a0, b0, B, mass, vs, X2, Y2);
+  IBMDisk Disk1(Nodes1, R1, Gamma1, Phi, a0, b0, B, mass1, vs, X1, Y1);
+  IBMDisk Disk2(Nodes2, R2, Gamma2, Phi, a0, b0, B, mass2, vs, X2, Y2);
   LatticeBoltzmann Waves(&Disk1, &Disk2);
-  int t,tmax=100 * T;
+  int t,tmax=10000*T;
   double k = 2 * M_PI / Lambda;
   double T_z=0, T_z_add=0, ART_z = 0;
   double F_x_1=0, F_x_1_add=0, ARF1_x = 0;
@@ -115,7 +121,8 @@ int main(int argc, char * argv[]){
   string extension = ".dat";
   string frame = "";
   int iy = Ly/2; int ix = 0;
-  double dtMD = 1.0;
+  double dtMD = 1e-1;
+  double OmegaB = M_PI / 1000.0;
   cout.precision(8);
   //Start
   Waves.Start(rho0,Jx0,Jy0,0,0);//,X0,Y0,R,vs);
@@ -153,19 +160,19 @@ int main(int argc, char * argv[]){
     //cout << t/T << " " << F_x << " " << F_x_add / T << " " << ARF_x << endl;
     //cout << t/T << " " << T_z << " " << T_z_add / T << " " << ART_z << endl;
     if(t % (int)T == 0){
-    Disk1.UpdatePEFRL(ARF1_x,ARF1_y,dtMD);
-    Disk2.UpdatePEFRL(ARF2_x,ARF2_y,dtMD);
+    Disk1.UpdatePEFRL(t, OmegaB,ARF1_x,ARF1_y,dtMD, Disk2,-1.0, 2*D);
+    Disk2.UpdatePEFRL(t, OmegaB,ARF2_x,ARF2_y,dtMD, Disk1,1.0, 2*D);
     //ARF_x = 0.5*(F_x_max + F_x_min);
     ARF1_x = F_x_1_add / T; 
     ARF2_x = F_x_2_add / T; 
     ARF1_y = F_y_1_add / T; 
     ARF2_y = F_y_2_add / T; 
     //ART1_z = T_z_add / T; 
-     cout << t/T << "\t"
-          << ARF1_x << "\t"
-          << ARF1_y << "\t"
-          << ARF2_x << "\t"
-          << ARF2_y << "\t"
+     cout << t << "\t"
+    //      << ARF1_x << "\t"
+    //      << ARF1_y << "\t"
+    //      << ARF2_x << "\t"
+    //      << ARF2_y << "\t"
           << Disk1.GetX() << "\t"
           << Disk1.GetY() << "\t"
           << Disk2.GetX() << "\t"
