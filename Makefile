@@ -1,7 +1,7 @@
 CC = g++
-CFLAGS = 
+CFLAGS =  
 DEPS = Waves_D2Q5.h IBM.h Rotor.h
-OBJ = main.o Waves_D2Q5.o IBM.o Rotor.h
+OBJ = main.o Waves_D2Q5.o IBM.o Rotor.o
 
 %.o: %.cpp $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)

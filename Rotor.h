@@ -34,14 +34,16 @@ private:
   double Tau;
   double Mass, Inertia;
   void Set_Rs(){r1 = radius; r2 = mass2 * radius / mass1;};
+  void Set_dotsX(){ x1 = X_cm - r1 * cos(theta); x2 = X_cm + r2 * cos(theta);}
+  void Set_dotsY(){ y1 = Y_cm - r1 * sin(theta); y2 = Y_cm + r2 * sin(theta);}
   void Update_Vx(double dt, double coeff){Vx_cm+=Fx_cm*(dt*coeff/Mass);};
   void Update_Vy(double dt, double coeff){Vy_cm+=Fy_cm*(dt*coeff/Mass);};
   void Update_Omega(double dt, double coeff){omega+=Tau*(dt*coeff/Inertia);};
-  void Update_X(double dt, double coeff){X_cm += Vx*(dt*coeff); x1 = X_cm - r1 * cos(theta); x2 = X_cm + r2 * cos(theta);};
-  void Update_Y(double dt, double coeff){Y_cm += Vy*(dt*coeff); y1 = Y_cm - r1 * sin(theta); y2 = Y_cm + r2 * sin(theta);};
+  void Update_X(double dt, double coeff){X_cm += Vx_cm*(dt*coeff);};
+  void Update_Y(double dt, double coeff){Y_cm += Vy_cm*(dt*coeff);};
   void Update_Theta(double dt, double coeff){theta+=omega*(dt*coeff);};
 public:
-  Rotor(double r0, double X0, double Y0, double theta0, double omega0, double m1, double m2 ,double mu0);
+  Rotor(double r10, double r20, double X0, double Y0, double Vx0, double Vy0, double theta0, double omega0, double rhop0 ,double mu0,double cp0);
   ~Rotor(void);
   //Getters
   double GetMass(){return Mass;}; 
@@ -49,8 +51,6 @@ public:
   double GetMass2(){return mass2;};
   double GetInertia(){return Inertia;};
   double GetRadius(){return radius;};
-  double GetGamma1(){return gamma1;};
-  double GetGamma2(){return gamma2;};
   double GetX(){return X_cm;};
   double GetY(){return Y_cm;};
   double GetX1(){return x1;};double GetX2(){return x2;};
