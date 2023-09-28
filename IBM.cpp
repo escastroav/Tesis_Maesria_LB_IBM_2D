@@ -418,11 +418,11 @@ double IBMDisk::Fy_spring(double diff, double DX, double DY)
 }
 double IBMDisk::Fx_magnetic(double t, double OmegaB, double DX, double DY)
 {
-  return -200 * (DX*sin(OmegaB*t) - DY*cos(OmegaB*t)) * (DY / (DX*DX + DY*DY));
+  return -2000 * (DX*sin(OmegaB*t) - DY*cos(OmegaB*t)) * (DY / (DX*DX + DY*DY));
 }
 double IBMDisk::Fy_magnetic(double t, double OmegaB, double DX, double DY)
 {
-  return 200 * (DX*sin(OmegaB*t) - DY*cos(OmegaB*t)) * (DX / (DX*DX + DY*DY));
+  return 2000 * (DX*sin(OmegaB*t) - DY*cos(OmegaB*t)) * (DX / (DX*DX + DY*DY));
 }
 void IBMDisk::UpdatePEFRL(double t, double omega, double ARF_x, double ARF_y, double dt, IBMDisk & Disk, double sign, double D)//(LatticeBoltzmann & LB, double dt)
 {

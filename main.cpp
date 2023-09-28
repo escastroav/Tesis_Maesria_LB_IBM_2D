@@ -84,8 +84,8 @@ void Neighbours(double* nb_x, double* nb_y, double x, double y)
 int main(int argc, char * argv[]){
   double R1 = 05.0;
   double R2 = 08.0;
-  double Gamma1 = 10.0;
-  double Gamma2 = 10.0;
+  double Gamma1 = 1.0;
+  double Gamma2 = 1.0;
   double a0 = 10.0;
   double b0 = 10.0;
   double Phi = M_PI * 0.0625 * 0.0;
@@ -105,11 +105,11 @@ int main(int argc, char * argv[]){
   int X2 = Lx/2 + D*cos(Phi);
   int Y1 = Ly/2 - D*sin(Phi);
   int Y2 = Ly/2 + D*sin(Phi);
-  double Po = 10.0/C2;
+  double Po = 1.0/C2;
   IBMDisk Disk1(Nodes1, R1, Gamma1, Phi, a0, b0, B, mass1, vs, X1, Y1);
   IBMDisk Disk2(Nodes2, R2, Gamma2, Phi, a0, b0, B, mass2, vs, X2, Y2);
   LatticeBoltzmann Waves(&Disk1, &Disk2);
-  int t,tmax=10000*T;
+  int t,tmax=1000*T;
   double k = 2 * M_PI / Lambda;
   double T_z=0, T_z_add=0, ART_z = 0;
   double F_x_1=0, F_x_1_add=0, ARF1_x = 0;
