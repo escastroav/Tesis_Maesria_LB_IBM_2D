@@ -7,9 +7,9 @@
 using namespace std;
 #include "ComputeEpsilon.h"
 //------------LB constants--------------------
-const double Lambda = 250; 
-const int Lx= 125;
-const int Ly= 125; 
+const double Lambda = 500; 
+const int Lx= 250;
+const int Ly= 250; 
 
 const int Q=5;
 const double W0=1.0/3;

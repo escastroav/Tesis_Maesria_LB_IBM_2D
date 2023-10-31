@@ -83,12 +83,14 @@ void Neighbours(double* nb_x, double* nb_y, double x, double y)
 
 int main(int argc, char * argv[]){
   double R1 = 05.0;
-  double R2 = 05.0;
+  double R2 = 08.0;
   double Gamma1 = 10.0;
   double Gamma2 = 10.0;
   double a0 = 10.0;
   double b0 = 10.0;
   double Phi = M_PI * 0.0625 * 0.0;
+  double D1 = 20.0;
+  double D2 = 20.0;
   double D = 0.0;
   double ds = 1.0;
   //int Nodes1 = (int)( 2 * M_PI * R1 / ds );
@@ -97,16 +99,16 @@ int main(int argc, char * argv[]){
   double Volume2 = 4.0 * M_PI * R2 * R2 * R2 / 3.0; 
   double vs = 0.25;
   double mu0 = 2.0;
-  double density = 10.0;
+  double density = 1.0;
   //double B = density1 * vs * vs;
   double mass1 = density * Volume1;
   double mass2 = density * Volume2;
   int X = Lx/2 - D*cos(Phi);
   int Y = Ly/2 - D*sin(Phi);
-  double Rho0 = 10.0;
+  double Rho0 = 1.0;
   double Po = Rho0/C2;
-  Rotor rotor(R1, R2, X, Y, 0.0, 0.0, Phi, 0.0, Rho0, mu0, vs);   
-  int t,tmax=10000; //*T;
+  Rotor rotor(D1, D2, R1, R2, X, Y, 0.0, 0.0, Phi, 0.0, Rho0, mu0, vs);   
+  int t,tmax=1000; //*T;
   double k = 2 * M_PI / Lambda;
   double dtMD = 1e+0;
   double OmegaB = M_PI / 10000.0;

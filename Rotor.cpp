@@ -1,16 +1,17 @@
 #include "Rotor.h"
 
-Rotor::Rotor( double r10, double r20, double X0, double Y0, double Vx0, double Vy0, double theta0, double omega0, double rhop0, double mu0, double cp0)
+Rotor::Rotor( double r10, double r20, double R10, double R20, double X0, double Y0, double Vx0, double Vy0, double theta0, double omega0, double rhop0, double mu0, double cp0)
 {
   r1 = r10; r2 = r20;
+  R1 = R10; R2 = R20;
   X_cm = X0; Y_cm = Y0;
   Vx_cm = Vx0; Vy_cm = Vy0;
   theta = theta0; omega = omega0;
   rhop = rhop0;
   mu = mu0;
   cp = cp0;
-  Vol1 = (4.0*M_PI/3.0)*r1*r1*r1;
-  Vol2 = (4.0*M_PI/3.0)*r2*r2*r2;
+  Vol1 = (4.0*M_PI/3.0)*R1*R1*R1;
+  Vol2 = (4.0*M_PI/3.0)*R2*R2*R2;
   Vol = Vol1 + Vol2;
   rhop = rhop0;
   mass1 = r2*rhop*Vol/(r1+r2); mass2 = r1*rhop*Vol/(r1+r2);
@@ -50,31 +51,31 @@ double Rotor::Tz_Gorkov(double c0, double rho0, double k, double P0)
 }
 double Rotor::Fx_drag(double eta0)
 {
-  double gamma1 = 6.0 * M_PI * eta0 * r1;	
+  double gamma1 = 6.0 * M_PI * eta0 * R1;	
   double Fx1 = -gamma1 * (Vx_cm - omega * (y1 - Y_cm));
 
-  double gamma2 = 6.0 * M_PI * eta0 * r2;	
+  double gamma2 = 6.0 * M_PI * eta0 * R2;	
   double Fx2 = -gamma2 * (Vx_cm - omega * (y2 - Y_cm));
 
   return Fx1 + Fx2;
 }
 double Rotor::Fy_drag(double eta0)
 {
-  double gamma1 = 6.0 * M_PI * eta0 * r1;	
+  double gamma1 = 6.0 * M_PI * eta0 * R1;	
   double Fy1 = -gamma1 * (Vy_cm + omega * (x1 - X_cm));
 
-  double gamma2 = 6.0 * M_PI * eta0 * r2;	
+  double gamma2 = 6.0 * M_PI * eta0 * R2;	
   double Fy2 = -gamma2 * (Vy_cm + omega * (x2 - X_cm));
 
   return Fy1 + Fy2;
 }
 double Rotor::Tz_drag(double eta0)
 {
-  double gamma1 = 6.0 * M_PI * eta0 * r1;	
+  double gamma1 = 6.0 * M_PI * eta0 * R1;	
   double Fx1 = -gamma1 * (Vx_cm - omega * (y1 - Y_cm));
   double Fy1 = -gamma1 * (Vy_cm - omega * (x1 - X_cm));
 
-  double gamma2 = 6.0 * M_PI * eta0 * r2;	
+  double gamma2 = 6.0 * M_PI * eta0 * R2;	
   double Fx2 = -gamma2 * (Vx_cm - omega * (y2 - Y_cm));
   double Fy2 = -gamma2 * (Vy_cm - omega * (x2 - X_cm));
 

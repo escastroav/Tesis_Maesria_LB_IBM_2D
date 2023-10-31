@@ -19,6 +19,7 @@ class Rotor{
 private:
   double radius;
   double r1, r2;
+  double R1, R2;
   double Vol, Vol1, Vol2;
   double rhop;
   double cp;
@@ -43,7 +44,7 @@ private:
   void Update_Y(double dt, double coeff){Y_cm += Vy_cm*(dt*coeff);};
   void Update_Theta(double dt, double coeff){theta+=omega*(dt*coeff);};
 public:
-  Rotor(double r10, double r20, double X0, double Y0, double Vx0, double Vy0, double theta0, double omega0, double rhop0 ,double mu0,double cp0);
+  Rotor(double r10, double r20, double R10, double R20, double X0, double Y0, double Vx0, double Vy0, double theta0, double omega0, double rhop0 ,double mu0,double cp0);
   ~Rotor(void);
   //Getters
   double GetMass(){return Mass;}; 
