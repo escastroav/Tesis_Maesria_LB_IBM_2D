@@ -23,19 +23,22 @@ private:
   double gamma;
   double A, B;
   double ds;
-  double X_center; double Y_center;
+  double X_center; double Y_center; double Z_center;
   double phi;
   double *dots_x;
   double *dots_y;
+  double *dots_z;
   double *normals_x;
   double *normals_y;
+  double *normals_z;
   // Molecular dynamics
   double mass; double bulk; double density; double vsound;
-  double fx; double fy;
-  double fx_J; double fy_J;
-  double Vx; double Vy;
+  double fx; double fy; double fz;
+  double fx_J; double fy_J; double fz_J;
+  double Vx; double Vy; double Vz;
   void Update_Vx(double dt, double coeff){Vx+=fx*(dt*coeff/mass);};
   void Update_Vy(double dt, double coeff){Vy+=fy*(dt*coeff/mass);};
+  void Update_Vz(double dt, double coeff){Vz+=fz*(dt*coeff/mass);};
   void Update_X(double dt, double coeff)
   {
     bool isOut = false;
@@ -132,10 +135,13 @@ public:
   double GetDensity(){return density;};
   double* GetDotsX(){return dots_x;};
   double* GetDotsY(){return dots_y;};
+  double* GetDotsZ(){return dots_z;};
   double GetX(){return X_center;};
   double GetY(){return Y_center;};
+  double GetZ(){return Z_center;};
   double GetVx(){return Vx;};
   double GetVy(){return Vy;};
+  double GetVz(){return Vz;};
   double GetFx(){return fx;};
   double GetFx_J(){return fx_J;};
   double GetFy_J(){return fy_J;};

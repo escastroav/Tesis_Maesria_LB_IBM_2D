@@ -32,9 +32,9 @@ double IBMDisk::Fx(LatticeBoltzmann & LB)
   double fx_p = 0;
   for(int k = 0; k < NDots; k++)
     {
-      I_p  = LB.Interpolate('P', dots_x[k], dots_y[k]);
-      I_Jx = LB.Interpolate('X', dots_x[k], dots_y[k]);
-      I_Jy = LB.Interpolate('Y', dots_x[k], dots_y[k]);
+      I_p  = LB.Interpolate('P', dots_x[k], dots_y[k], dots_z[k]);
+      I_Jx = LB.Interpolate('X', dots_x[k], dots_y[k], dots_z[k]);
+      I_Jy = LB.Interpolate('Y', dots_x[k], dots_y[k], dots_z[k]);
       
       v2 = I_Jx * I_Jx + I_Jy * I_Jy;
       fx_p = - I_p * normals_x[k] * ds;
@@ -58,9 +58,9 @@ double IBMDisk::Fy(LatticeBoltzmann & LB)
   double fy_p = 0;
   for(int k = 0; k < NDots; k++)
     {
-      I_p  = LB.Interpolate('P', dots_x[k], dots_y[k]);
-      I_Jx = LB.Interpolate('X', dots_x[k], dots_y[k]);
-      I_Jy = LB.Interpolate('Y', dots_x[k], dots_y[k]);
+      I_p  = LB.Interpolate('P', dots_x[k], dots_y[k], dots_z[k]);
+      I_Jx = LB.Interpolate('X', dots_x[k], dots_y[k], dots_z[k]);
+      I_Jy = LB.Interpolate('Y', dots_x[k], dots_y[k], dots_z[k]);
       
       v2 = I_Jx * I_Jx + I_Jy * I_Jy;
       fy_p = - I_p * normals_x[k] * ds;
@@ -80,9 +80,9 @@ double IBMDisk::Fx_J(LatticeBoltzmann & LB)
   double I_rho= 0;
   for(int k = 0; k < NDots; k++)
     {
-      I_rho= LB.Interpolate('R', dots_x[k], dots_y[k]);
-      I_Jx = LB.Interpolate('X', dots_x[k], dots_y[k]);
-      I_Jy = LB.Interpolate('Y', dots_x[k], dots_y[k]);
+      I_rho= LB.Interpolate('R', dots_x[k], dots_y[k], dots_z[k]);
+      I_Jx = LB.Interpolate('X', dots_x[k], dots_y[k], dots_z[k]);
+      I_Jy = LB.Interpolate('Y', dots_x[k], dots_y[k], dots_z[k]);
       fx_tmp += - I_Jx * (I_Jx * normals_x[k] + I_Jy * normals_y[k]) * ds;
     }
   return fx_tmp;
@@ -99,9 +99,9 @@ double IBMDisk::Tz_J(LatticeBoltzmann & LB)
     {
       rot_dotx = dots_x[k] - X_center;
       rot_doty = dots_y[k] - Y_center;
-      I_rho= LB.Interpolate('R', dots_x[k], dots_y[k]);
-      I_Jx = LB.Interpolate('X', dots_x[k], dots_y[k]);
-      I_Jy = LB.Interpolate('Y', dots_x[k], dots_y[k]);
+      I_rho= LB.Interpolate('R', dots_x[k], dots_y[k], dots_z[k]);
+      I_Jx = LB.Interpolate('X', dots_x[k], dots_y[k], dots_z[k]);
+      I_Jy = LB.Interpolate('Y', dots_x[k], dots_y[k], dots_z[k]);
       tz_tmp += - ( rot_dotx * I_Jy - rot_doty * I_Jx ) * (I_Jx * normals_x[k] + I_Jy * normals_y[k]) * ds; 
       //cout <<  ( rot_dotx * I_Jy - rot_doty * I_Jx ) << endl;
     }
@@ -117,9 +117,9 @@ double IBMDisk::Fy_J(LatticeBoltzmann & LB)
   double I_rho= 0;
   for(int k = 0; k < NDots; k++)
     {
-      I_rho = LB.Interpolate('R',dots_x[k], dots_y[k]);
-      I_Jx = LB.Interpolate('X', dots_x[k], dots_y[k]);
-      I_Jy = LB.Interpolate('Y', dots_x[k], dots_y[k]);
+      I_rho = LB.Interpolate('R',dots_x[k], dots_y[k], dots_z[k]);
+      I_Jx = LB.Interpolate('X', dots_x[k], dots_y[k], dots_z[k]);
+      I_Jy = LB.Interpolate('Y', dots_x[k], dots_y[k], dots_z[k]);
       fy_tmp += - I_Jy * (I_Jx * normals_x[k] + I_Jy * normals_y[k]) * ds ;
     }
   return fy_tmp;
@@ -129,17 +129,18 @@ double IBMDisk::Fx_p(LatticeBoltzmann & LB)
   double fx_tmp = 0;
   double mid_dotx = 0;
   double mid_doty = 0; 
+  double mid_dotz = 0;
   double I_p = 0;
   for(int k = 0; k < NDots-1; k++)
     {
       mid_dotx = (dots_x[k+1] + dots_x[k]) * 0.5;
       mid_doty = (dots_y[k+1] + dots_y[k]) * 0.5;      
-      I_p = LB.Interpolate('P', mid_dotx, mid_doty);
+      I_p = LB.Interpolate('P', mid_dotx, mid_doty, mid_dotz);
       fx_tmp += - I_p * normals_x[k] * ds;
     }
   mid_dotx = (dots_x[0] + dots_x[NDots-1]) * 0.5;
   mid_doty = (dots_y[0] + dots_y[NDots-1]) * 0.5;      
-  I_p = LB.Interpolate('P', mid_dotx, mid_doty);
+  I_p = LB.Interpolate('P', mid_dotx, mid_doty, mid_dotz);
   fx_tmp += - I_p * normals_x[NDots-1] * ds;
   
   return fx_tmp;
@@ -158,14 +159,14 @@ double IBMDisk::Tz_p(LatticeBoltzmann & LB)
       mid_doty = (dots_y[k+1] + dots_y[k]) * 0.5;
       rot_dotx = dots_x[k] - X_center;      
       rot_doty = dots_y[k] - Y_center;      
-      I_p = LB.Interpolate('P', mid_dotx, mid_doty);
+      I_p = LB.Interpolate('P', mid_dotx, mid_doty, mid_doty);
       tz_tmp += - I_p * ( rot_dotx * normals_y[k] - rot_doty * normals_x[k] )* ds;
     }
   mid_dotx = (dots_x[0] + dots_x[NDots-1]) * 0.5;
   mid_doty = (dots_y[0] + dots_y[NDots-1]) * 0.5;      
   rot_dotx = mid_dotx - X_center;      
   rot_doty = mid_doty - Y_center;      
-  I_p = LB.Interpolate('P', mid_dotx, mid_doty);
+  I_p = LB.Interpolate('P', mid_dotx, mid_doty, mid_doty);
   tz_tmp += - I_p * ( rot_dotx * normals_y[NDots-1] - rot_doty * normals_x[NDots-1] ) * ds;
   
   return tz_tmp;
@@ -180,12 +181,12 @@ double IBMDisk::Fy_p(LatticeBoltzmann & LB)
     {
       mid_dotx = (dots_x[k+1] + dots_x[k]) * 0.5;
       mid_doty = (dots_y[k+1] + dots_y[k]) * 0.5;
-      I_p = LB.Interpolate('P', mid_dotx, mid_doty);
+      I_p = LB.Interpolate('P', mid_dotx, mid_doty, mid_doty);
       fy_tmp += - I_p * normals_y[k] * ds;
     }
   mid_dotx = (dots_x[0] + dots_x[NDots-1]) * 0.5;
   mid_doty = (dots_y[0] + dots_y[NDots-1]) * 0.5;      
-  I_p = LB.Interpolate('P', mid_dotx, mid_doty);
+  I_p = LB.Interpolate('P', mid_dotx, mid_doty, mid_doty);
   fy_tmp += - I_p * normals_y[NDots-1] * ds;
   
   return fy_tmp;
@@ -204,17 +205,17 @@ double IBMDisk::Fx_p2_v2(LatticeBoltzmann & LB)
     {
       mid_dotx = (dots_x[k+1] + dots_x[k]) * 0.5;
       mid_doty = (dots_y[k+1] + dots_y[k]) * 0.5;      
-      I_p = LB.Interpolate('P', mid_dotx, mid_doty);
-      I_Jx = LB.Interpolate('X', mid_dotx, mid_doty);
-      I_Jy = LB.Interpolate('Y', mid_dotx, mid_doty);
+      I_p = LB.Interpolate('P', mid_dotx, mid_doty, mid_doty);
+      I_Jx = LB.Interpolate('X', mid_dotx, mid_doty, mid_doty);
+      I_Jy = LB.Interpolate('Y', mid_dotx, mid_doty, mid_doty);
       v2 = I_Jx * I_Jx + I_Jy * I_Jy;
       fx_tmp += 0.5 * ( v2 - (I_p * I_p / C2) ) * normals_x[k] * ds;
     }
   mid_dotx = (dots_x[0] + dots_x[NDots-1]) * 0.5;
   mid_doty = (dots_y[0] + dots_y[NDots-1]) * 0.5;      
-  I_p = LB.Interpolate('P', mid_dotx, mid_doty);
-  I_Jx = LB.Interpolate('X', mid_dotx, mid_doty);
-  I_Jy = LB.Interpolate('Y', mid_dotx, mid_doty);
+  I_p = LB.Interpolate('P', mid_dotx, mid_doty, mid_doty);
+  I_Jx = LB.Interpolate('X', mid_dotx, mid_doty, mid_doty);
+  I_Jy = LB.Interpolate('Y', mid_dotx, mid_doty, mid_doty);
   v2 = I_Jx * I_Jx + I_Jy * I_Jy;
   fx_tmp += 0.5 * ( v2 - (I_p * I_p / C2) ) * normals_x[NDots-1] * ds;
   
@@ -238,9 +239,9 @@ double IBMDisk::Tz_p2_v2(LatticeBoltzmann & LB)
       mid_doty = (dots_y[k+1] + dots_y[k]) * 0.5; 
       rot_dotx = dots_x[k] - X_center;
       rot_doty = dots_y[k] - Y_center;     
-      I_p = LB.Interpolate('P', mid_dotx, mid_doty);
-      I_Jx = LB.Interpolate('X', mid_dotx, mid_doty);
-      I_Jy = LB.Interpolate('Y', mid_dotx, mid_doty);
+      I_p = LB.Interpolate('P', mid_dotx, mid_doty, mid_doty);
+      I_Jx = LB.Interpolate('X', mid_dotx, mid_doty, mid_doty);
+      I_Jy = LB.Interpolate('Y', mid_dotx, mid_doty, mid_doty);
       v2 = I_Jx * I_Jx + I_Jy * I_Jy;
       tz_tmp += 0.5 * ( v2 - (I_p * I_p / C2) ) * ( rot_dotx * normals_y[k] - rot_doty * normals_x[k] ) * ds;
     }
@@ -248,9 +249,9 @@ double IBMDisk::Tz_p2_v2(LatticeBoltzmann & LB)
   mid_doty = (dots_y[0] + dots_y[NDots-1]) * 0.5;      
   rot_dotx = mid_dotx - X_center;
   rot_doty = mid_doty - Y_center;     
-  I_p = LB.Interpolate('P', mid_dotx, mid_doty);
-  I_Jx = LB.Interpolate('X', mid_dotx, mid_doty);
-  I_Jy = LB.Interpolate('Y', mid_dotx, mid_doty);
+  I_p = LB.Interpolate('P', mid_dotx, mid_doty, mid_doty);
+  I_Jx = LB.Interpolate('X', mid_dotx, mid_doty, mid_doty);
+  I_Jy = LB.Interpolate('Y', mid_dotx, mid_doty, mid_doty);
   v2 = I_Jx * I_Jx + I_Jy * I_Jy;
   tz_tmp += 0.5 * ( v2 - (I_p * I_p / C2) ) * ( rot_dotx * normals_y[NDots-1] - rot_doty * normals_x[NDots-1] ) * ds;
   
@@ -270,17 +271,17 @@ double IBMDisk::Fy_p2_v2(LatticeBoltzmann & LB)
     {
       mid_dotx = (dots_x[k+1] + dots_x[k]) * 0.5;
       mid_doty = (dots_y[k+1] + dots_y[k]) * 0.5;      
-      I_p = LB.Interpolate('P', mid_dotx, mid_doty);
-      I_Jx = LB.Interpolate('X', mid_dotx, mid_doty);
-      I_Jy = LB.Interpolate('Y', mid_dotx, mid_doty);
+      I_p = LB.Interpolate('P', mid_dotx, mid_doty, mid_doty);
+      I_Jx = LB.Interpolate('X', mid_dotx, mid_doty, mid_doty);
+      I_Jy = LB.Interpolate('Y', mid_dotx, mid_doty, mid_doty);
       v2 = I_Jx * I_Jx + I_Jy * I_Jy;
       fy_tmp += 0.5 * ( v2 - (I_p * I_p / C2) ) * normals_y[k] * ds;
     }
   mid_dotx = (dots_x[0] + dots_x[NDots-1]) * 0.5;
   mid_doty = (dots_y[0] + dots_y[NDots-1]) * 0.5;      
-  I_p = LB.Interpolate('P', mid_dotx, mid_doty);
-  I_Jx = LB.Interpolate('X', mid_dotx, mid_doty);
-  I_Jy = LB.Interpolate('Y', mid_dotx, mid_doty);
+  I_p = LB.Interpolate('P', mid_dotx, mid_doty, mid_doty);
+  I_Jx = LB.Interpolate('X', mid_dotx, mid_doty, mid_doty);
+  I_Jy = LB.Interpolate('Y', mid_dotx, mid_doty, mid_doty);
   v2 = I_Jx * I_Jx + I_Jy * I_Jy;
   fy_tmp += 0.5 * ( v2 - (I_p * I_p / C2) ) * normals_y[NDots-1] * ds;
 

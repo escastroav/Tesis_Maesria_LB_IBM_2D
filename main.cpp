@@ -6,14 +6,18 @@
 double Kernel(double r)
 {
   // r = x - x1 / (x0 - x1)
-  if(abs(r) < 0.5)
+  if(abs(r)<1.0)
+    return abs(1.0 - r);
+  else
+    return 0;
+  /**if(abs(r) < 0.5)
     return (1.0+sqrt(1.0-3.0*r*r))/3.0;
   else if(abs(r) >= 0.5 && abs(r) <= 1.5)
     return (5.0-3.0*abs(r)-sqrt(1.0 - 3.0*(1.0-abs(r))*(1.0-abs(r)) ))/6.0;
   else
-    return 0;
+    return 0;**/
 }
-void Neighbours(double* nb_x, double* nb_y, double x, double y)
+void Neighbours(double* nb_x, double* nb_y, double* nb_z, double x, double y)
 {
   /**
   21	22	23	24	25	26
@@ -91,15 +95,16 @@ int main(int argc, char * argv[]){
   double ds = 1.0;
   int Nodes = (int)( 2 * M_PI * a0 / ds );
   double Volume = M_PI * R * R; 
-  double vs = 0.26;//(1699/1500) *C; //polystyrene / water with C_o = 1/3
+  double vs = 0.25;//(1699/1500) *C; //polystyrene / water with C_o = 1/3
   double density = 4.0;//500 / Volume;//(1050/1000) / C2 ; // polystyrene / water with rho = B / C^2
   double B = density * vs * vs; // in the code is defined B_o = 1 for water
   double mass = density * Volume;
-  int X0 = Lx/4;
+  int X0 = 5*Lx/16;
   int Y0 = Ly/2;
+  int Z0 = Lz/2;
   double Po = 10/C2;
   IBMDisk Disk(Nodes, R, Gamma, Phi, a0, b0, B, mass, vs, X0, Y0);
-  int t,tmax=200*T;
+  int t,tmax=2*T;
   double k = 2 * M_PI / Lambda;
   double T_z=0, T_z_max=0, T_z_min=0, ART_z = 0;
   double F_x=0, F_x_max=0, F_x_min=0, F_x_add = 0, ARF_x = 0;
@@ -115,14 +120,14 @@ int main(int argc, char * argv[]){
   Waves.Start(rho0,Jx0,Jy0,0,0,X0,Y0,R,vs);
   //Run
   for(t=0;t<tmax;t++){
-    Waves.Collision(Nodes,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), Phi, R, a0, b0, Disk.GetDs(), vs, t);
-    Waves.ImposeFields(t,X0,Y0,R,vs,Po);
+    Waves.Collision(Disk.GetX(), Disk.GetY(), 0 , R, vs);
+    Waves.ImposeFields(t,X0,Y0,0,R,vs,Po);
     Waves.Advection();
     //X positions are relative to the wavelength!
-    F_x = Disk.Fx_p2_v2(Waves) + Disk.Fx_J(Waves);
-    if(t>11*T) F_x_add += F_x; 
-    F_y = Disk.Fy_p2_v2(Waves) + Disk.Fy_J(Waves);
-    if(t>11*T) F_y_add += F_y; 
+    //F_x = Disk.Fx_p2_v2(Waves);// + Disk.Fx_J(Waves);
+    //if(t>11*T) F_x_add += F_x; 
+    //F_y = Disk.Fy_p2_v2(Waves);// + Disk.Fy_J(Waves);
+    //if(t>11*T) F_y_add += F_y; 
     //if(F_x > F_x_max) F_x_max = F_x;
     //if(F_x < F_x_min) F_x_min = F_x;
     //ARF_x = 0.5*(F_x_max + F_x_min);
@@ -133,26 +138,26 @@ int main(int argc, char * argv[]){
     //if(T_z > T_z_max && t > 10 * T) T_z_max = T_z;
     //if(T_z < T_z_min && t > 10 * T) T_z_min = T_z;
     //ART_z = 0.5*(T_z_max + T_z_min);
-    if(t>11*T && t%(int)T==0){
-    Disk.UpdatePEFRL(ARF_x,ARF_y,dtMD);//(Waves,dtMD);
-    ARF_x = F_x_add / T;//0.5*(F_x_max + F_x_min);
-    ARF_y = F_y_add / T;//0.5*(F_x_max + F_x_min);
-    cout << t/T << "\t"
-          << ARF_x << "\t"
-          << ARF_y << "\t"
-          << Disk.GetX() << "\t" 
-          << Disk.GetY() << endl;
-    F_x_max = 0;
-    F_y_max = 0;
-    F_x_add = 0;
-    F_y_add = 0;}
-    if(t%1000==0 && t>11*T) {
-      frame = outName+to_string((int)(t/1000))+extension;
-      Waves.Print(frame.c_str(),Nodes,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), R, Phi, a0, b0, Disk.GetDs(),vs);}
+    //if(t>11*T && t%(int)T==0){
+    //Disk.UpdatePEFRL(ARF_x,ARF_y,dtMD);//(Waves,dtMD);
+    //ARF_x = F_x_add / T;//0.5*(F_x_max + F_x_min);
+    //ARF_y = F_y_add / T;//0.5*(F_x_max + F_x_min);
+    //cout << t/T << "\t"
+    //      << F_x << endl;
+          //<< ARF_y << "\t"
+          //<< Disk.GetX() << "\t" 
+          //<< Disk.GetY() << endl;
+    //F_x_max = 0;
+    //F_y_max = 0;
+    //F_x_add = 0;
+    //F_y_add = 0;//}
+    //if(t%1000==0 && t>11*T) {
+    //  frame = outName+to_string((int)(t/1000))+extension;
+    //  Waves.Print(frame.c_str(),Nodes,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), R, Phi, a0, b0, Disk.GetDs(),vs);}
   }
   
   //Show
-  //Waves.Print("Interphase.dat",Nodes,Disk.GetDotsX(), Disk.GetDotsY(),Disk.GetBulk(), Disk.GetX(), Disk.GetY(), Disk.GetVx(), Disk.GetVy(), R, Phi, a0, b0, Disk.GetDs(),vs);
+  Waves.Print("Interphase.dat", Disk.GetX(), Disk.GetY(), Disk.GetZ(),R,vs);
   //cout //<< scientific
   //     << Phi << "\t"
   //     << ARF_x << endl;//"\t"
